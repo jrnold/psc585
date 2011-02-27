@@ -336,6 +336,7 @@ to values of less than or greater to 1 for under or over relaxation.</p>
 <p>Uses the ILU(0) algorithm. Algorithm 2.3 in PSC 585 class notes.n</p>
 <p>There exist other preconditioners in scipy.linalg and scipy.linalg.sparse
 but I could not find which one corresponded to ilu(0).</p>
+<p>This is too slow to be useful.</p>
 </dd></dl>
 
 <dl class="function">
@@ -366,12 +367,52 @@ but I could not find which one corresponded to ilu(0).</p>
 <dl class="function">
 <dt id="psc585.invariant_direct_solver">
 <tt class="descclassname">psc585.</tt><tt class="descname">invariant_direct_solver</tt><big>(</big><em>P</em><big>)</big><a class="reference internal" href="_modules/psc585.html#invariant_direct_solver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.invariant_direct_solver" title="Permalink to this definition">¶</a></dt>
-<dd><p>Normalize stochastic matrix P and return 1 - normalized.</p>
-</dd></dl>
+<dd><p>Calculate Invariant Distribution by direct methods</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>P</strong> : ndarray, shape (n, n)</p>
+<blockquote>
+<div><p>Transition matrix of a discrete Markov Chain</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>x</strong> : ndarray, shape(n, )</p>
+<blockquote class="last">
+<div><p>Invariant distribution of the Markov Chain</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The invariant distribution <img class="math" src="_images/math/f2ca003a7da0de4994b4733e203b74ff52d42553.png" alt="\pi"/> of a Markov Chain P satisfies</p>
+<div class="math">
+<p><img src="_images/math/2ae8cdb377863893def0ff10b3eace286468938a.png" alt="\pi P = \pi \iff \pi(I - P) = 0" /></p>
+</div><p>Since the matrix I - P is singular, instead solve the linear system</p>
+<div class="math">
+<p><img src="_images/math/8143fabb7c0f1d11d314a0d3f6f898eaa60e1527.png" alt="\pi Q = e_n" /></p>
+</div><p>where</p>
+<div class="math">
+<p><img src="_images/math/132f70e0217b98a5bc35b335d6d260d94ff2c89d.png" alt="Q =
+\begin{pmatrix}
+  1 - p_{11} &amp; - p_{12} &amp; \cdots &amp; -p_{1(n-1)} &amp; 1 \\
+  - p_{21} &amp; 1 - p_{22} &amp; \cdots &amp; -p_{2(n-1)} &amp; 1 \\
+  \vdots &amp; \vdots &amp; \ddots  &amp; \vdots &amp; \vdots \\
+  -p_{n1} &amp; -p_{n2} &amp; \cdots &amp; -p_{n(n-1)} &amp; 1 \\
+\end{pmatrix}" /></p>
+</div><p>and</p>
+<div class="math">
+<p><img src="_images/math/15f3cd5ddab61785757fb05bab5da9c67f26ce6b.png" alt="e_n =
+\begin{pmatrix}
+0 &amp; 0 &amp; \cdots &amp; 0 &amp; 1
+\end{pmatrix}" /></p>
+</div></dd></dl>
 
 <dl class="function">
 <dt id="psc585.invariant_integral">
-<tt class="descclassname">psc585.</tt><tt class="descname">invariant_integral</tt><big>(</big><em>f</em>, <em>n</em>, <em>qw=&lt;function newton_cotes at 0x379cc80&gt;</em><big>)</big><a class="reference internal" href="_modules/psc585.html#invariant_integral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.invariant_integral" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">psc585.</tt><tt class="descname">invariant_integral</tt><big>(</big><em>f</em>, <em>n</em>, <em>qw=&lt;function newton_cotes at 0x218ec80&gt;</em><big>)</big><a class="reference internal" href="_modules/psc585.html#invariant_integral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.invariant_integral" title="Permalink to this definition">¶</a></dt>
 <dd><p>Solve Integral equation by quadrature approximation</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -616,9 +657,52 @@ Newton-Cotes midpoint rule.</p>
 
 <dl class="function">
 <dt id="psc585.power_iteration">
-<tt class="descclassname">psc585.</tt><tt class="descname">power_iteration</tt><big>(</big><em>P</em>, <em>x=None</em>, <em>tol=1.0000000000000001e-15</em>, <em>T=200</em><big>)</big><a class="reference internal" href="_modules/psc585.html#power_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.power_iteration" title="Permalink to this definition">¶</a></dt>
-<dd><p>Iterative linear solver</p>
-</dd></dl>
+<tt class="descclassname">psc585.</tt><tt class="descname">power_iteration</tt><big>(</big><em>P</em>, <em>x=None</em>, <em>tol=1.0000000000000001e-15</em>, <em>T=1000</em><big>)</big><a class="reference internal" href="_modules/psc585.html#power_iteration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.power_iteration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve for Invariant Distribution of a Markov Chain by Power Iteration</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>P</strong> : ndarray, shape (N, N)</p>
+<blockquote>
+<div><p>Transition matrix of a discrete Markov Chain</p>
+</div></blockquote>
+<p><strong>x</strong> : ndarray, shape (N, )</p>
+<blockquote>
+<div><p>Initial guess for the invariant distribution</p>
+</div></blockquote>
+<p><strong>tol</strong> : float, optional</p>
+<blockquote>
+<div><p>Convergence tolerance</p>
+</div></blockquote>
+<p><strong>T</strong> : int, optional</p>
+<blockquote>
+<div><p>Maximum number of iterations</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>x</strong> : ndarray, shape (N, )</p>
+<blockquote>
+<div><p>Invariant distribution</p>
+</div></blockquote>
+<p><strong>t</strong> : int</p>
+<blockquote>
+<div><p>Number of iterations</p>
+</div></blockquote>
+<p><strong>eps</strong> : float</p>
+<blockquote class="last">
+<div><p>Final residual error</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Solves for the invariant distribution of a Markov Chain using the
+iterative scheme</p>
+<div class="math">
+<p><img src="_images/math/42eda0146609e7ae5fa80a39cdea41c426bcdc9f.png" alt="\pi^T_t = P^T \pi_{t-1}^T = (\pi_{t-1} P)^T" /></p>
+</div></dd></dl>
 
 <dl class="function">
 <dt id="psc585.qnwcheb1">
@@ -740,7 +824,7 @@ largest eigenvalues of matrix.</p>
 
 <dl class="function">
 <dt id="psc585.to_discrete">
-<tt class="descclassname">psc585.</tt><tt class="descname">to_discrete</tt><big>(</big><em>f</em>, <em>n</em>, <em>qw=&lt;function newton_cotes at 0x379cc80&gt;</em><big>)</big><a class="reference internal" href="_modules/psc585.html#to_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.to_discrete" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">psc585.</tt><tt class="descname">to_discrete</tt><big>(</big><em>f</em>, <em>n</em>, <em>qw=&lt;function newton_cotes at 0x218ec80&gt;</em><big>)</big><a class="reference internal" href="_modules/psc585.html#to_discrete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.to_discrete" title="Permalink to this definition">¶</a></dt>
 <dd><p>Discretize Continuous Markov Chain</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -783,7 +867,33 @@ p_ij in the matrix means p(s_j | s_i).</p>
 <dt id="psc585.tvnorm">
 <tt class="descclassname">psc585.</tt><tt class="descname">tvnorm</tt><big>(</big><em>x</em>, <em>y=None</em><big>)</big><a class="reference internal" href="_modules/psc585.html#tvnorm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.tvnorm" title="Permalink to this definition">¶</a></dt>
 <dd><p>Total variation norm</p>
-</dd></dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>x</strong> : ndarray, shape (N, )</p>
+<blockquote>
+<div><p>Vector</p>
+</div></blockquote>
+<p><strong>y</strong> : ndarray, shape (N, ), optional</p>
+<blockquote>
+<div><p>Vector. If given calculates the norm of <cite>x</cite> - <cite>y</cite></p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>z</strong> : float</p>
+<blockquote class="last">
+<div><p>Total variation norm</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The total variation norm of two distributions <img class="math" src="_images/math/2d9bf1e8951067fbca1fb2d2fbd59f5a01d45b3b.png" alt="x, y \in \Delta(S)"/> is</p>
+<div class="math">
+<p><img src="_images/math/ce01b7fa29e213534cdda927120063c1241b79cf.png" alt="\| x - y \|_{TV} = \sum_{i = 1}^{n} | x_i - y_i |" /></p>
+</div></dd></dl>
 
 </div>
 <div class="section" id="module-psc585.ps1">
@@ -791,7 +901,7 @@ p_ij in the matrix means p(s_j | s_i).</p>
 <p>Problem Set 1: Markov Chains</p>
 <dl class="class">
 <dt id="psc585.ps1.Legislature">
-<em class="property">class </em><tt class="descclassname">psc585.ps1.</tt><tt class="descname">Legislature</tt><big>(</big><em>x</em>, <em>ufunc=&lt;function quadratic_utility at 0x3fadde8&gt;</em><big>)</big><a class="reference internal" href="_modules/psc585/ps1.html#Legislature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.Legislature" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">psc585.ps1.</tt><tt class="descname">Legislature</tt><big>(</big><em>x</em>, <em>ufunc=&lt;function quadratic_utility at 0x2a605f0&gt;</em><big>)</big><a class="reference internal" href="_modules/psc585/ps1.html#Legislature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.Legislature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Legislature in problem 3</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
