@@ -179,7 +179,55 @@ def eyen(n, i=None):
     return e
 
 def invariant_direct_solver(P):
-    """ Normalize stochastic matrix P and return 1 - normalized.
+    """ Calculate Invariant Distribution by direct methods
+
+    Parameters
+    -----------
+    P : ndarray, shape (n, n)
+        Transition matrix of a discrete Markov Chain
+
+    Returns
+    ---------
+    x : ndarray, shape(n, )
+        Invariant distribution of the Markov Chain
+
+    Notes
+    --------
+
+    The invariant distribution :math:`\\pi` of a Markov Chain P satisfies
+    
+    .. math::
+
+       \\pi P = \\pi \\iff \\pi(I - P) = 0
+
+    Since the matrix I - P is singular, instead solve the linear system
+
+    .. math::
+
+       \\pi Q = e_n
+
+    where
+
+    .. math::
+    
+       Q =
+       \\begin{pmatrix}
+         1 - p_{11} & - p_{12} & \\cdots & -p_{1(n-1)} & 1 \\\\
+         - p_{21} & 1 - p_{22} & \\cdots & -p_{2(n-1)} & 1 \\\\
+         \\vdots & \\vdots & \\ddots  & \\vdots & \\vdots \\\\
+         -p_{n1} & -p_{n2} & \\cdots & -p_{n(n-1)} & 1 \\\\
+       \\end{pmatrix}
+
+    and
+
+    .. math ::
+
+       e_n =
+       \\begin{pmatrix}
+       0 & 0 & \\cdots & 0 & 1
+       \\end{pmatrix}
+
+
     """
     n = P.shape[0]
     Q = sp.eye(n) - P
@@ -187,14 +235,70 @@ def invariant_direct_solver(P):
     return la.solve(Q.T, eyen(n, n - 1))
 
 def tvnorm(x, y=None):
-    """ Total variation norm"""
+    """ Total variation norm
+
+    Parameters
+    -----------
+    x : ndarray, shape (N, )
+        Vector
+    y : ndarray, shape (N, ), optional
+        Vector. If given calculates the norm of `x` - `y`
+
+    Returns
+    ------------
+    z : float
+        Total variation norm
+
+    Notes
+    ------------
+
+    The total variation norm of two distributions :math:`x, y \\in \\Delta(S)` is
+
+    .. math::
+
+       \\| x - y \\|_{TV} = \sum_{i = 1}^{n} | x_i - y_i | 
+
+
+    """
     if y is None:
         return la.norm(x)
     else:
         return la.norm(x - y, 1)
 
-def power_iteration(P, x=None, tol=10e-16, T=200):
-    """ Iterative linear solver"""
+def power_iteration(P, x=None, tol=10e-16, T=1000):
+    """ Solve for Invariant Distribution of a Markov Chain by Power Iteration
+
+    Parameters
+    ------------
+    P : ndarray, shape (N, N)
+        Transition matrix of a discrete Markov Chain
+    x : ndarray, shape (N, )
+        Initial guess for the invariant distribution
+    tol : float, optional
+        Convergence tolerance
+    T : int, optional
+        Maximum number of iterations
+
+    Returns
+    ---------
+    x : ndarray, shape (N, )
+        Invariant distribution
+    t : int
+        Number of iterations
+    eps : float
+        Final residual error 
+
+    Notes
+    ---------
+
+    Solves for the invariant distribution of a Markov Chain using the
+    iterative scheme
+
+    .. math::
+
+       \\pi^T_t = P^T \\pi_{t-1}^T = (\\pi_{t-1} P)^T
+
+    """
     t = 0
     eps = tol + 1
     n = P.shape[0]
@@ -792,11 +896,13 @@ def gjacobi(A, b, x,  maxit=1000, tol=10e-12, normalizer=None):
     d = A.diagonal()
     info = -1
     for iter in range(maxit):
-        dx = (b - A.dot(x)) / d 
+        print iter
+        dx = (b - A.dot(x)) / d
         x += dx
         if normalizer:
             normalizer(x)
         relres = tvnorm(dx)
+        print relres, tol
         if relres < tol:
             info = 0
             break
@@ -846,11 +952,13 @@ def gseidel(A, b, x, maxit=1000, tol=10e-13, relax=1., normalizer=None):
     Q = sparse.tril(A).tocsr()
     info = -1
     for iter in range(maxit):
+        print iter
         dx = spla.spsolve(Q, b - A.dot(x))
-        x += relax * dx
+        x += dx * relax
         if normalizer:
             normalizer(x)
         relres = tvnorm(dx)
+        print relres, tol
         if relres < tol:
             info = 0
             break
