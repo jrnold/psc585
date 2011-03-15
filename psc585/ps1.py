@@ -2,6 +2,7 @@
 import scipy as sp
 from scipy import special
 from scipy import sparse
+from scipy import stats
 from psc585 import *
 
 def p2a_f(sprime, s):
@@ -80,9 +81,9 @@ def p2c_f(sprime, s):
 
     Parameters
     ------------
-    sprime : float.
+    sprime : array, shape (2, )
         State transitioning to
-    s : float
+    s : array, shape (2, )
         State transitioning from
 
     Returns
