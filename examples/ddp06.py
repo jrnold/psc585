@@ -1,4 +1,11 @@
 """Bioeconomic Model """
+import sys
+sys.path.append("..")
+
+import scipy as sp
+
+import psc585
+from psc585 import dp
 
 T = 10
 ## Energy capacity
@@ -16,6 +23,9 @@ S = sp.r_[:(emax + 1)]
 n = len(S)
 # Number of actions
 m = 3
+
+## Reward matrix
+f = sp.zeros((n, m))
 
 def getindex(x, A):
     return (x == A).nonzero()[0][0]
@@ -38,8 +48,19 @@ for k in range(m):
         P[k, i, j] = P[k, i, j] + p[k] * (1 - q[k])
         
 # terminal values
-vterm = sp.ones(n)
-vterm[0] = 0
+vterm = sp.ones((n, 1))
+vterm[0, 0] = 0
 
 
+ddp06 = dp.Ddpsolve(discount=1,
+                    reward = f,
+                    P=P,
+                    T=T,
+                    vterm=vterm)
+
+foo = ddp06.backsolve()
+
+
+            
+            
 
