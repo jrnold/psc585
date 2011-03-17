@@ -1,4 +1,3 @@
-
 # Market price
 price = 1
 # Initial stock of ore
@@ -37,3 +36,10 @@ for i in range(n):
         if len(snext) > 0:
             g[i, j] = snext
             
+
+model = dp.Ddpsolve.from_transfunc(transfunc=g, reward=f,
+                                   discount=delta)
+v, x, pstar = model.funcit(sp.zeros(n))
+
+v1, x1, pstar1 = model.newton(sp.zeros(n))
+

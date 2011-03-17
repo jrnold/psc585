@@ -4,11 +4,18 @@ from scipy import linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
+def eyeminus(x):
+    """ 1 - x in place """
+    x *= -1
+    x[sp.diag_indices(x.shape[0])] = 1 + x.diagonal()
+
 def _expandg(g):
     """ Expand transition function to a matrix
     """
-    return sparse.coo_matrix((sp.ones(prod(g.shape)),
-                             (sp.r_[0:prod(g.shape)], g.flatten())))
+    P = sparse.coo_matrix((sp.ones(sp.prod(g.shape)),
+                             (sp.r_[0:sp.prod(g.shape)],
+                              g.flatten(1))))
+    return P.tocsr()
 
 class Ddpsolve(object):
     """ Discrete Time, Discrete Choice Dynamic Programming Problems
@@ -20,34 +27,42 @@ class Ddpsolve(object):
        or (0, 1] for finite horizon problems.
     reward: array, shape (n, m)
        Reward values
-    P: array, shape (n, m)
-       Stochastic transition matrix
+    P: array, shape (m * n, n)
+       Stochastic transition matrix. The axes correspond to action,
+       initial state, and next state.
     T: int, optional
        Number of time periods. Set to `None` for
        infinite horizon problems.
     vterm: optional
        Terminal value function for finite horizon problems.
 
-
     """
     
     def __init__(self, discount, reward, P, T=None, vterm=None):
         self.discount = discount
         self.reward = reward
-        self.P = P
         self.T = T
         self.n, self.m = self.reward.shape
+        self.P = P 
         self.vterm = vterm
         if self.T and vterm is None:
             self.vterm = sp.zeros(self.n)
 
     def setReward(self, reward):
+        """Set reward"""
         self.reward = reward
         self.n, self.m = self.reward.shape
 
     def valmax(self, v):
         """ Belman Euqation
 
+        Returns
+        ----------------
+        v : array (n, )
+            Optimal values
+        x : array (n, )
+            Optimal controls.
+            
         Notes
         ------
 
@@ -59,13 +74,12 @@ class Ddpsolve(object):
                 f(s, x) + \delta \sum_{s' \in S} P(s' | s, x) V(s')
              \right\}            
         """
-        U = self.reward + sp.reshape(self.discount * self.P.dot(v), (self.n, self.m))
-        print U
+        U = self.reward + sp.reshape(self.discount * sp.dot(self.P, v),
+                                     (self.m, self.n)).T
         ## argmax by row
         x = U.argmax(1)
-        ## maximum values for these actions
+        ## max by row
         v = U[sp.r_[0:self.n], x]
-        print v, x
         return (v, x)
 
     def valpol(self, x):
@@ -73,8 +87,17 @@ class Ddpsolve(object):
 
         Parameters
         -----------
-        x : array or integer
+        x : array
             policy (an action for all states)
+
+        Returns
+        --------
+        pstar : array, shape (n, n)
+            Transition probability matrix
+        fstar : array, shape (n, )
+            Optimal rewards
+        ind : array, shape (n,)
+            Index of values
 
         Notes
         ---------
@@ -85,10 +108,18 @@ class Ddpsolve(object):
         ## Select indices of policy from reward function
         ## Not sure if this works with
         ## ddpsolve.m calculates the index value
-        fstar = self.reward[sp.r_[0:self.T], x]
+        ind = self.n * x + sp.r_[:self.n]
+        fstar = self.reward[ sp.r_[0:self.n] , x.astype(int)]
+        pstar = self.P[ind, ]
+        return pstar, fstar, ind
 
-    def backsolve(self):
+    def backsolve(self, T=None, vterm=None):
         """Solve finite time model by Backward Recursion
+
+        Parameters
+        -------------
+        T : int, optional
+            Number of periods of time.
 
         Returns
         ----------
@@ -98,14 +129,87 @@ class Ddpsolve(object):
             Value function.             
 
         """
-        X = sp.zeros((self.n, self.T))
-        V = sp.column_stack((sp.zeros((self.n, self.T)), self.vterm))
-        # pstar = sp.zeros(self.n, self.n, sp.T)
-        for t in sp.arange(self.T - 1, -1, -1):
-            v, x = self.valmax(V[ : , t + 1])
-            V[ :, t] = v
-            X[ :, t] = x
-            ## TODO add pstar
-        return (X, V)
+        if T is None:
+            if self.T is not None:
+                T = self.T
+            else:
+                print ("Not a finite time model")
+                return
+        if vterm is None and self.vterm is None:
+            vterm = sp.zeros(self.n)
+        else:
+            vterm = self.vterm
+        x = sp.zeros((self.n, T), dtype=int)
+        v = sp.column_stack((sp.zeros((self.n, T)), vterm))
+        pstar = sp.zeros((self.n, self.n, T))
+        for t in sp.arange(T - 1, -1, -1):
+            v[ :, t] , x[ :, t]  = self.valmax(v[ : , t + 1])
+            pstar[..., t] = self.valpol(x[:, t])[0]
+        return (x, v, pstar)
 
+    def funcit(self, v, maxit=100, tol=sp.sqrt(sp.finfo(sp.float64).eps)):
+        """ Function iteration
+
+        Parameters
+        --------------
+        v : array, shape (n, )
+           Initial guess
+        maxit : int
+           Maximum number of iterations
+        tol : float
+           Convergence tolerance
+        """
+        for it in range(maxit):
+            vold = v.copy()
+            v, x = self.valmax(vold)
+            change = la.norm(v - vold)
+            if change < tol:
+                break
+        pstar = self.valpol(x)[0]
+        return (v, x, pstar)
+
+    def newton(self, v, maxit=100, tol=sp.sqrt(sp.finfo(sp.float64).eps)):
+        """Solve Bellman equation via Newton method"""
+        x = sp.zeros(self.n)
+        for it in range(maxit):
+            vold = v.copy()
+            xold = x.copy()
+            v, x = self.valmax(v)
+            pstar, fstar, ind = self.valpol(x)
+            pstar *= self.discount
+            eyeminus(pstar)
+            v = la.solve(pstar, fstar)
+            change = la.norm(v - vold)
+            print("%d, %f" % (it, change))
+            if sp.all(x == xold):
+                break
+        return (v, x, pstar)
+
+    @classmethod
+    def from_transfunc(cls, transfunc, **kwargs):
+        """Initialize with deterministic transition function
+
+        Parameters
+        -------------
+        transfunc : array (n, m)
+             Deterministic transition function. Axes are
+             state, action.
+        """
+        kwargs['P'] = sp.asarray(_expandg(transfunc).todense())
+        return cls(**kwargs)        
+
+    @classmethod
+    def from_transprob(cls, transprob, **kwargs):
+        """Initialize with transaction probabilities
+
+        Parameters
+        -----------
+        transprob : array, shape (m, n, n)
+                  Stochastic transition matrix. The axes correspond to action,
+                  initial state, and next state.
+
+        """
+        kwargs['P'] = sp.reshape(transprob, (self.m * self.n, self.n))
+        return cls(**kwargs)
+    
 

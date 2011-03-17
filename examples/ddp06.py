@@ -1,4 +1,6 @@
-"""Bioeconomic Model """
+"""Bioeconomic Model
+Demo demddp06.m in Compecon matlab toolbox
+"""
 import sys
 sys.path.append("..")
 
@@ -51,16 +53,12 @@ for k in range(m):
 vterm = sp.ones((n, 1))
 vterm[0, 0] = 0
 
-
 ddp06 = dp.Ddpsolve(discount=1,
                     reward = f,
-                    P=P,
+                    transprob=P,
                     T=T,
                     vterm=vterm)
 
-foo = ddp06.backsolve()
+x, v, pstar = ddp06.backsolve()
 
-
-            
-            
 
