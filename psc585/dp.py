@@ -19,8 +19,8 @@ class Ddpsolve(object):
        or (0, 1] for finite horizon problems.
     reward: array, shape (n, m)
        Reward values
-    transfunc: array, shape (n, m)
-       Deterministic transition function.
+    transprob: array, shape (n, m)
+       Stochastic transition matrix
     T: int, optional
        Number of time periods. Set to `None` for
        infinite horizon problems.
@@ -29,10 +29,9 @@ class Ddpsolve(object):
 
     """
     
-    def __init__(self, discount, reward, transfunc, T=None, vterm=None):
+    def __init__(self, discount, reward, P, T=None, vterm=None):
         self.discount = discount
         self.reward = reward
-        self.P = _expandg(transfunc)
         self.n = reward.shape[0]
         self.m = reward.shape[1]
         if T and not vterm:
@@ -61,57 +60,34 @@ class Ddpsolve(object):
 
     def valpol(self, x):
         """Returns state function and state transition prob matrix induced by a policy
+
+        Parameters
+        -----------
+        x : array or integer
+            policy (an action for all states)
+
+        Notes
+        ---------
+
+        `x` is (n, T+1) for finite horizon problems, and (n, 1) for infinite
+        horizon problems.
         """
-        
+        ## Select indices of policy from reward function
+        ## Not sure if this works with
+        ## ddpsolve.m calculates the index value
+        fstar = self.reward[sp.r_[0:self.], x]
 
     def backsolve(self):
         """ Solve Bellman equation via backward recursion"""
         x = sp.zeros(self.n, self.T)
         v = sp.concatenate(sp.zeros(self.n, self.T), 1)
-        pstar = zeros(sp.n, sp.n, sp.T)
-        for t in range(sp.T):
+        pstar = zeros(self.n, self.n, sp.T)
+        for t in sp.arange(self.T, -1, -1):
             print t
-            
-        
+            v, x = self.valmax(v[ : , t])
+            v[ :, t] = v
+            x[ :, t] = x
+            ## TODO add pstar
+        return (x, v)
 
-    
-
-# Market price
-price = 1
-# Initial stock of ore
-sbar = 10
-# Discount 
-delta = 0.9
-# State Space
-S = sp.r_[0:(sbar + 1)]
-# Action space
-X = sp.r_[0:(sbar + 1)]
-n = len(S)
-m = len(X)
-
-## Cost of extraction
-def cost(s, x):  return x**2 / (1. + s)
-
-## Reward function
-f = sp.zeros((n, m))
-## I can use indices for states and actions
-## Since python indexes on 0
-## All states
-for i in range(n):
-    ## All actions
-    for j in range(m):
-        ## If enough ore to extract
-        if j <= i:
-            f[i, j] = price * j - cost(i, j)
-        else:
-            f[i, j] = -Inf
-
-## Deterministic Transition
-g = sp.zeros((n, m))
-for i in range(n):
-    for j in range(m):
-        snext = sp.nonzero(S == i - j)[0]
-        if len(snext) > 0:
-            g[i, j] = snext
-            
 
