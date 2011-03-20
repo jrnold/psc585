@@ -4,6 +4,8 @@ from scipy import linalg as la
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
+EPS = sp.sqrt(sp.finfo(sp.float64).eps)
+
 def eyeminus(x):
     """ 1 - x in place """
     x *= -1
@@ -147,30 +149,98 @@ class Ddpsolve(object):
             pstar[..., t] = self.valpol(x[:, t])[0]
         return (x, v, pstar)
 
-    def funcit(self, v, maxit=100, tol=sp.sqrt(sp.finfo(sp.float64).eps)):
-        """ Function iteration
+    def funcit(self, v=None, maxit=100, tol=EPS, error_bounds=True):
+        """ Solve Bellman equations by Function iteration
 
         Parameters
         --------------
-        v : array, shape (n, )
+        v : array, shape (n, ), optional
            Initial guess
-        maxit : int
+        maxit : int, optional
            Maximum number of iterations
-        tol : float
+        tol : float, optional
            Convergence tolerance
+        error_bounds : bool, optional
+           Use error bounds to determine convergence.
+
+        Returns
+        ------------
+        info : int
+            Exit status. 0 if converged. -1 if not.
+        iter : int
+            Number of iterations
+        relres : float
+            Residual variance
+        v : array, shape (n, )
+        x : array, shape 
+        pstar : array, shape
+           
         """
+        if v is None:
+            v = sp.zeros(self.n)
+        info = -1
+        delta = (self.discount) / (1 - self.discount)
         for it in range(maxit):
             vold = v.copy()
             v, x = self.valmax(vold)
-            change = la.norm(v - vold)
-            if change < tol:
-                break
+            if error_bounds:
+                lbound = delta * (v - vold).min()
+                ubound = delta * (v - vold).max()
+                relres = (ubound - lbound)
+                if relres < tol:
+                    v += (ubound + lbound) / 2
+                    info = 0
+                    break
+            else:
+                relres = la.norm(v - vold)
+                if relres < tol:
+                    info = 0
+                    break
         pstar = self.valpol(x)[0]
-        return (v, x, pstar)
+        iter = it + 1
+        return (info, iter, relres, v, x, pstar)
 
-    def newton(self, v, maxit=100, tol=sp.sqrt(sp.finfo(sp.float64).eps)):
-        """Solve Bellman equation via Newton method"""
-        x = sp.zeros(self.n)
+    def newton(self, v=None, maxit=100, tol=EPS, verbose=False,
+               gauss_seidel=False):
+        """Solve Bellman equations via Newton method
+
+        Parameters
+        --------------
+        v : array, shape (n, ), optional
+           Initial guess for values.
+        x : array, shape (n, ), optional
+           Initial guess for policy.
+        maxit : int, optional
+           Maximum number of iterations
+        tol : float, optional
+           Convergence tolerance
+        error_bounds : bool, optional
+           Use error bounds to determine convergence.
+
+        Returns
+        ------------
+        info : int
+            Exit status. 0 if converged. -1 if not.
+        iter : int
+            Number of iterations
+        relres : float
+            Residual variance
+        v : array, shape (n, )
+        x : array, shape 
+        pstar : array, shape
+
+        Notes
+        --------
+
+        Also called policy iteration.
+
+        """
+        if v is None:
+            v = sp.zeros(self.n)
+        ## Set initial values of x to such
+        ## That they can never match on the first iteration.
+        x = sp.ones(self.n) * -1
+        info = -1
         for it in range(maxit):
             vold = v.copy()
             xold = x.copy()
@@ -179,11 +249,14 @@ class Ddpsolve(object):
             pstar *= self.discount
             eyeminus(pstar)
             v = la.solve(pstar, fstar)
-            change = la.norm(v - vold)
-            print("%d, %f" % (it, change))
+            relres = la.norm(v - vold)
+            if verbose:
+                print("%d, %f" % (it, relres))
             if sp.all(x == xold):
+                info = 0
                 break
-        return (v, x, pstar)
+        iter = it + 1
+        return (info, iter, relres, v, x, pstar)
 
     @classmethod
     def from_transfunc(cls, transfunc, **kwargs):
@@ -209,7 +282,8 @@ class Ddpsolve(object):
                   initial state, and next state.
 
         """
-        kwargs['P'] = sp.reshape(transprob, (self.m * self.n, self.n))
+        m, n, n2 = transprob.shape
+        kwargs['P'] = sp.reshape(transprob, (m * n, n))
         return cls(**kwargs)
     
 
