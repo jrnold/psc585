@@ -2,7 +2,6 @@
 import scipy as sp
 from scipy import linalg as la
 from scipy import sparse
-from scipy.sparse import linalg as spla
 
 EPS = sp.sqrt(sp.finfo(sp.float64).eps)
 
@@ -85,7 +84,7 @@ class Ddpsolve(object):
         return (v, x)
 
     def valpol(self, x):
-        """Returns state function and state transition prob matrix induced by a policy
+        """Evaluation policy
 
         Parameters
         -----------
@@ -111,8 +110,8 @@ class Ddpsolve(object):
         ## Not sure if this works with
         ## ddpsolve.m calculates the index value
         ind = self.n * x + sp.r_[:self.n]
-        fstar = self.reward[ sp.r_[0:self.n] , x.astype(int)]
-        pstar = self.P[ind, ]
+        fstar = self.reward[ sp.r_[0:self.n] , x.astype(int)].copy()
+        pstar = self.P[ind, ].copy()
         return pstar, fstar, ind
 
     def backsolve(self, T=None, vterm=None):
@@ -167,7 +166,7 @@ class Ddpsolve(object):
         ------------
         info : int
             Exit status. 0 if converged. -1 if not.
-        iter : int
+        t : int
             Number of iterations
         relres : float
             Residual variance
@@ -180,7 +179,10 @@ class Ddpsolve(object):
             v = sp.zeros(self.n)
         info = -1
         delta = (self.discount) / (1 - self.discount)
+        t = 0
+        relres = tol + 1
         for it in range(maxit):
+            t += 1
             vold = v.copy()
             v, x = self.valmax(vold)
             if error_bounds:
@@ -197,8 +199,7 @@ class Ddpsolve(object):
                     info = 0
                     break
         pstar = self.valpol(x)[0]
-        iter = it + 1
-        return (info, iter, relres, v, x, pstar)
+        return (info, t, relres, v, x, pstar)
 
     def newton(self, v=None, maxit=100, tol=EPS, verbose=False,
                gauss_seidel=False):
@@ -214,14 +215,12 @@ class Ddpsolve(object):
            Maximum number of iterations
         tol : float, optional
            Convergence tolerance
-        error_bounds : bool, optional
-           Use error bounds to determine convergence.
 
         Returns
         ------------
         info : int
             Exit status. 0 if converged. -1 if not.
-        iter : int
+        t : int
             Number of iterations
         relres : float
             Residual variance
@@ -238,25 +237,32 @@ class Ddpsolve(object):
         if v is None:
             v = sp.zeros(self.n)
         ## Set initial values of x to such
-        ## That they can never match on the first iteration.
-        x = sp.ones(self.n) * -1
+        x = sp.zeros(self.n) 
         info = -1
+        t = 0
         for it in range(maxit):
-            vold = v.copy()
+            t += 1
             xold = x.copy()
             v, x = self.valmax(v)
             pstar, fstar, ind = self.valpol(x)
             pstar *= self.discount
             eyeminus(pstar)
-            v = la.solve(pstar, fstar)
-            relres = la.norm(v - vold)
+            if not gauss_seidel:
+                vold = v.copy()
+                v = la.solve(pstar, fstar)
+                relres = la.norm(v - vold)
+            else:
+                ## Gauss Seidel
+                L = sp.tril(pstar)
+                dv = la.solve(L, fstar - sp.dot(pstar, v))
+                relres = la.norm(dv)
+                v += dv
             if verbose:
                 print("%d, %f" % (it, relres))
             if sp.all(x == xold):
                 info = 0
                 break
-        iter = it + 1
-        return (info, iter, relres, v, x, pstar)
+        return (info, t, relres, v, x, pstar)
 
     @classmethod
     def from_transfunc(cls, transfunc, **kwargs):
@@ -282,7 +288,8 @@ class Ddpsolve(object):
                   initial state, and next state.
 
         """
-        m, n, n2 = transprob.shape
+        m = transprob.shape[0]
+        n = transprob.shape[1]
         kwargs['P'] = sp.reshape(transprob, (m * n, n))
         return cls(**kwargs)
     

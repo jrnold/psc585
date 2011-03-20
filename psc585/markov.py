@@ -4,8 +4,6 @@ import itertools
 import scipy as sp
 from scipy import random
 from scipy import linalg as la
-from scipy import special
-from scipy.io import matlab
 from scipy import sparse
 from scipy.sparse import linalg as spla
 from scipy.special import orthogonal
@@ -166,7 +164,8 @@ def kosaraju(P):
             not_in_comp = [j for j in range(n) if j not in E[-1][0]]
             # If all edges to states outside component
             # are 0, then it is a strongly connected component
-            if not not_in_comp or not sp.any(P[sp.ix_(E[-1][0], not_in_comp)] > 0):
+            outside_edges = sp.any(P[sp.ix_(E[-1][0], not_in_comp)] > 0)
+            if not not_in_comp or not outside_edges:
                 E[-1][1] = True
     return E
 
@@ -448,7 +447,7 @@ class lookahead(object):
         for t in range(T):
             for i in range(m):
                 x = fsample(chains[i, ])
-                print(t,i, x)
+                print(t, i, x)
                 chains[i, ] =  x
         self.chains = chains
 
@@ -466,9 +465,8 @@ class lookahead(object):
             Probability density of the invariant distribution of `f` at `point`.
 
         """
-        foo = [self.f(s, i) for i in self.chains]
-        print(foo)
-        p = sp.array(foo).mean()
+        chains = [self.f(s, i) for i in self.chains]
+        p = sp.array(chains).mean()
         return p
 
 def newton_cotes(n, a=0., b=1.):
@@ -536,9 +534,9 @@ def newton_cotes_d(n, a=None, b=None):
         b = sp.ones(d)
     x, w = zip(*[newton_cotes(ni, ai, bi) for ni, ai, bi in zip(n, a, b)])
     # Weights 
-    w = array([array(y).prod() for y in itertools.product(*w)])
+    w = sp.array([sp.array(y).prod() for y in itertools.product(*w)])
     ## X to Cartesian product of points
-    x = array([y for y in itertools.product(*x)])
+    x = sp.array([y for y in itertools.product(*x)])
     return x, w
 
 
@@ -692,9 +690,11 @@ def qnwcheb1(n, a, b):
     
     Port of the qnwcheb1 function in the compecon matlab toolbox.
     """
-    x = (b + a) / 2 - (b - a) / 2 * sp.cos(sp.pi / n * sp.arange(0.5, n + 0.5, 1))
+    x = ((b + a) / 2 - (b - a) / 2
+         * sp.cos(sp.pi / n * sp.arange(0.5, n + 0.5, 1)))
     w2 =  sp.r_[1, -2. / (sp.r_[1:(n - 1):2] * sp.r_[3:(n + 1):2])]
-    w1 = sp.cos(sp.pi / n * sp.mat((sp.r_[0:n] + 0.5)).T * sp.mat((sp.r_[0:n:2]))).A
+    w1 = (sp.cos(sp.pi / n * sp.mat((sp.r_[0:n] + 0.5)).T *
+                 sp.mat((sp.r_[0:n:2]))).A)
     w0 = (b - a) / n
     w = w0 * sp.dot(w1, w2)
     return x, w
@@ -860,7 +860,8 @@ def sparse_power_iteration(P, x, tol=10e-16, maxiter=200):
     Q *= -1
     Q = Q.T
     info = -1
-    for iter in range(maxiter):
+    t = -1
+    for t in range(maxiter):
         ## dot() is matrix multiplication
         dx = spla.spsolve(U, spla.spsolve(L, Q.matvec(x)))
         x -= dx
@@ -868,8 +869,8 @@ def sparse_power_iteration(P, x, tol=10e-16, maxiter=200):
         if relres < tol:
             info = 0
             break
-    iter += 1
-    return (info, iter, relres)
+    t += 1
+    return (info, t, relres)
 
 
 def gjacobi(A, b, x,  maxit=1000, tol=10e-12, normalizer=None):
@@ -998,11 +999,13 @@ def gseidel(A, b, x, maxit=1000, tol=10e-13, relax=1., normalizer=None):
 #         print(i)
 #         # The Shape of P is now (n - i - 1, n - i - 1)
 #         P = (P[:-(i + 1), :-(i + 1)]
-#              + asarray(mat(P)[ :-(i + 1), -(i + 1)] * mat(P)[ -(i + 1), :-(i + 1)])
+#              + (asarray(mat(P)[ :-(i + 1), -(i + 1)]
+#                 * mat(P)[ -(i + 1), :-(i + 1)]))
 #              * (1 / P[-(i + 1), :-(i + 1)].sum()))
 #         print(P)
 #         ## TODO: not working
-#         PA[:-(i + 2), -(i + 2)] = P[ :-(i + 1), -(i + 1)] / P[ -(i + 1), :-(i+1)].sum()
+#         PA[:-(i + 2), -(i + 2)] = (P[ :-(i + 1), -(i + 1)] /
+#                       P[ -(i + 1), :-(i+1)].sum())
 #         print(PA)
     
 
@@ -1032,10 +1035,12 @@ class TestKosaraju(object):
                    [ 0.05,  0.  ,  0.  ,  0.4 ,  0.1 ,  0.05,  0.  ,  0.4 ,  0.  ]])
     
     def test_P1(self):
+        """ Test results against matrix P1"""
         E1 = [[[5, 8], True], [[7, 6], False], [[0, 1, 2, 3, 4], True]]
         assert kosaraju(self.P1) == E1
 
     def test_P2(self):
+        """ Test results against matrix P2"""
         E2 = [[[0, 1, 3, 4, 2, 5, 6, 8, 7], True]]
         assert kosaraju(self.P2) == E2
 
