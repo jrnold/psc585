@@ -1,3 +1,12 @@
+import sys
+sys.path.append("..")
+
+import scipy as sp
+
+import psc585
+from psc585 import dp
+
+
 # Market price
 price = 1
 # Initial stock of ore
@@ -39,7 +48,8 @@ for i in range(n):
 
 model = dp.Ddpsolve.from_transfunc(transfunc=g, reward=f,
                                    discount=delta)
-v, x, pstar = model.funcit(sp.zeros(n))
+ddp01_1 = model.funcit(sp.zeros(n))
+ddp01_2 = model.newton(sp.zeros(n), gauss_seidel=True)
 
-v1, x1, pstar1 = model.newton(sp.zeros(n))
+
 

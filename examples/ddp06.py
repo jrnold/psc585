@@ -53,11 +53,11 @@ for k in range(m):
 vterm = sp.ones((n, 1))
 vterm[0, 0] = 0
 
-ddp06 = dp.Ddpsolve(discount=1,
-                    reward = f,
-                    transprob=P,
-                    T=T,
-                    vterm=vterm)
+ddp06 = dp.Ddpsolve.from_transprob(discount=1,
+                                   reward = f,
+                                   transprob=P,
+                                   T=T,
+                                   vterm=vterm)
 
 x, v, pstar = ddp06.backsolve()
 
