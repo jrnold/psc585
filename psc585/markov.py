@@ -83,7 +83,8 @@ def kosaraju(P):
     Arguments
     ----------
     
-    P : array
+    P : array, shape (n, n)
+        Must be bool or integer.
 
     Returns
     ------------
@@ -164,8 +165,11 @@ def kosaraju(P):
             not_in_comp = [j for j in range(n) if j not in E[-1][0]]
             # If all edges to states outside component
             # are 0, then it is a strongly connected component
-            outside_edges = sp.any(P[sp.ix_(E[-1][0], not_in_comp)] > 0)
-            if not not_in_comp or not outside_edges:
+            if not_in_comp:
+                outside_edges = sp.any(P[sp.ix_(E[-1][0], not_in_comp)] > 0)
+                if not outside_edges:
+                    E[-1][1] = True
+            else:
                 E[-1][1] = True
     return E
 
