@@ -1,4 +1,4 @@
-"""Dynamic Programming """
+"""Dynamic Programming"""
 import scipy as sp
 from scipy import linalg as la
 from scipy import sparse
@@ -55,7 +55,7 @@ class Ddpsolve(object):
         self.n, self.m = self.reward.shape
 
     def valmax(self, v):
-        """ Belman Euqation
+        """ Solve single Bellman equation
 
         Returns
         ----------------
@@ -84,7 +84,7 @@ class Ddpsolve(object):
         return (v, x)
 
     def valpol(self, x):
-        """Evaluation policy
+        """ Evaluation policy
 
         Parameters
         -----------
@@ -115,7 +115,7 @@ class Ddpsolve(object):
         return pstar, fstar, ind
 
     def backsolve(self, T=None, vterm=None):
-        """Solve finite time model by Backward Recursion
+        """Solve finite system by backward recursion
 
         Parameters
         -------------
@@ -149,7 +149,7 @@ class Ddpsolve(object):
         return (x, v, pstar)
 
     def funcit(self, v=None, maxit=100, tol=EPS, error_bounds=True):
-        """ Solve Bellman equations by Function iteration
+        """ Solve Bellman equations by function iteration
 
         Parameters
         --------------
@@ -203,7 +203,7 @@ class Ddpsolve(object):
 
     def newton(self, v=None, maxit=100, tol=EPS, verbose=False,
                gauss_seidel=False):
-        """Solve Bellman equations via Newton method
+        """Solve Bellman equations via Newton method (policy iteration)
 
         Parameters
         --------------
@@ -215,6 +215,8 @@ class Ddpsolve(object):
            Maximum number of iterations
         tol : float, optional
            Convergence tolerance
+        gauss_seidel : bool, optional
+           Use Gauss-Seidel to solve the linear equation.
 
         Returns
         ------------
@@ -245,16 +247,16 @@ class Ddpsolve(object):
             xold = x.copy()
             v, x = self.valmax(v)
             pstar, fstar, ind = self.valpol(x)
-            pstar *= self.discount
-            eyeminus(pstar)
+            Q = pstar * self.discount
+            eyeminus(Q)
             if not gauss_seidel:
                 vold = v.copy()
-                v = la.solve(pstar, fstar)
+                v = la.solve(Q, fstar)
                 relres = la.norm(v - vold)
             else:
                 ## Gauss Seidel
-                L = sp.tril(pstar)
-                dv = la.solve(L, fstar - sp.dot(pstar, v))
+                L = sp.tril(Q)
+                dv = la.solve(L, fstar - sp.dot(Q, v))
                 relres = la.norm(dv)
                 v += dv
             if verbose:
@@ -292,5 +294,54 @@ class Ddpsolve(object):
         n = transprob.shape[1]
         kwargs['P'] = sp.reshape(transprob, (m * n, n))
         return cls(**kwargs)
+
     
+def ddpsimul(pstar, s, N, x):
+    """ Monte-Carlo simulation of discrete-state/action controlled Markov process
+
+    Parameters
+    -------------
+    pstar : array, shape (n, n) or (n, n, T)
+      Optimal state transition matrix. Usually returned by one of the methods of
+      `Dpsolve`. The array has shape (n, n) for infinite horizon processes,
+      and (n, n, T) for finite horizon processes.
+    s : array, shape (k, )
+      Initial states
+    N : int
+      Number of simulations
+    x : array, shape (n, ) or (n, T)
+      Optimal controls
+
+    Returns
+    ---------
+    spath : array, shape (k, N + 1)
+       Simulated states
+    
+    """
+    infinite = (len(pstar.shape) == 2)
+    n = pstar.shape[1]
+    k = len(s)
+    spath = sp.zeros((k, N+1), int)
+    if infinite:
+        ## Row cumulative sum
+        cp = pstar.cumsum(1)
+        spath[:, 0] = s
+        for t in range(1, N + 1):
+            ## Draws the column from a categorical distribution
+            rdraw = random.rand(k, 1)
+            s = (sp.repeat(rdraw, n, 1) > cp[s, ]).sum(1)
+            spath[:, t] = s
+    else:
+        T = pstar.shape[2]
+        if N > T:
+            print("Simulations greater than the time horizon are ignored.")
+        N = min(N, T)
+        spath[:, 0] = s
+        for t in range(N + 1):
+            cp = pstar[...,t].cumsum(1)
+            rdraw = random.rand(k, 1)
+            s = (sp.repeat(rdraw, n, 1) > cp[s, ]).sum(1)
+
+    xpath = x[spath]
+    return (spath, xpath)
 
