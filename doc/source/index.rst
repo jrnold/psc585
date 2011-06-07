@@ -10,17 +10,16 @@ This is the code that I wrote for `PSC 585: Dynamic and Computational
 Modeling <http://www.rochester.edu/college/psc/syllabi/kalandrakis/PSC585.pdf>`_
 at the University of Rochester in Spring 2011 and taught by `Tasos Kalendrakis <http://www.rochester.edu/college/faculty/kalandrakis/>`_.
 
-Generic Code
---------------------
+Assignments
+=================
 
-.. automodule:: psc585
-   :members:
+.. toctree::
 
-Problem Set 1
---------------------
+   assignment3
+   assignment4
 
-.. automodule:: psc585.ps1
-   :members:
+Code
+=================
 
 
 Indices and tables
