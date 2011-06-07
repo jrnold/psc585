@@ -1,0 +1,944 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psc585 &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for psc585</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Code written for PSC 585: Dynamic and Computational Models, Spring 2011&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">random</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">la</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">special</span>
+<span class="kn">from</span> <span class="nn">scipy.io</span> <span class="kn">import</span> <span class="n">matlab</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">spla</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">orthogonal</span>
+
+<div class="viewcode-block" id="eigs"><a class="viewcode-back" href="../index.html#psc585.eigs">[docs]</a><span class="k">def</span> <span class="nf">eigs</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">6</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the n largest eigenvalues of an array&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">la</span><span class="o">.</span><span class="n">eig</span><span class="p">(</span><span class="n">A</span><span class="p">)[</span><span class="mi">0</span><span class="p">])[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="spectral_gap"><a class="viewcode-back" href="../index.html#psc585.spectral_gap">[docs]</a><span class="k">def</span> <span class="nf">spectral_gap</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Spectral gap </span>
+<span class="sd">    </span>
+<span class="sd">    The spectral gap is the difference between the two</span>
+<span class="sd">    largest eigenvalues of matrix.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ev</span> <span class="o">=</span> <span class="n">eigs</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ev</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">ev</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">real</span>
+</div>
+<div class="viewcode-block" id="dfs"><a class="viewcode-back" href="../index.html#psc585.dfs">[docs]</a><span class="k">def</span> <span class="nf">dfs</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Depth first search</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments:</span>
+<span class="sd">    - `P`: scipy.array.  Stochastic transition matrix.</span>
+<span class="sd">    - `order`: scipy.array.  </span>
+
+<span class="sd">    Return values:</span>
+<span class="sd">        - `F`: scipy.array. time of first visit</span>
+<span class="sd">        - `L`: scipy.array. time of last visit</span>
+<span class="sd">        - `G`: scipy.array. graph</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">order</span><span class="p">:</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="c"># P, n in scope</span>
+    <span class="k">def</span> <span class="nf">visit</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Visit children of each node</span>
+<span class="sd">        </span>
+<span class="sd">        Arguments:</span>
+<span class="sd">        - `i`: int. index of root node</span>
+<span class="sd">        - `F`: scipy.array. time of last visit</span>
+<span class="sd">        - `L`: scipy.array. time of last visit</span>
+<span class="sd">        - `G`: scipy.array. graph</span>
+<span class="sd">        - `T`: int. counter</span>
+
+<span class="sd">        Return values:</span>
+<span class="sd">        </span>
+<span class="sd">        Tuple of length four containing updated values of</span>
+<span class="sd">        (`F`, `L`, `G`, `T`). </span>
+
+<span class="sd">        This function is a closure using `n` and `P`. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">T</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">F</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">F</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">G</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">F</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">visit</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+
+        <span class="n">T</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">T</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">F</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">F</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">visit</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">G</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="kosaraju"><a class="viewcode-back" href="../index.html#psc585.kosaraju">[docs]</a><span class="k">def</span> <span class="nf">kosaraju</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Kosaraju&#39;s Algorithm for Strongly Connected Components</span>
+<span class="sd">    </span>
+<span class="sd">    Arguments</span>
+<span class="sd">    ----------</span>
+<span class="sd">    </span>
+<span class="sd">    P : array</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ------------</span>
+
+<span class="sd">    list : list</span>
+<span class="sd">      Each element of the list is a component of the graph. Each</span>
+<span class="sd">      component is a list of length two.  The first element in the</span>
+<span class="sd">      component is a list of the states in that component.  The second</span>
+<span class="sd">      element in the component is a `boolean` indicating whether the</span>
+<span class="sd">      component is an ergodic set.</span>
+
+<span class="sd">    The typical Kosaraju algorithm is modified to return the ergodic</span>
+<span class="sd">    sets and transient set of a Markov chain transition matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c"># shape is the dimension of P</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">visit</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">E</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; depth-first-search</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        </span>
+<span class="sd">        i : int</span>
+<span class="sd">           State index.</span>
+<span class="sd">        F : list</span>
+<span class="sd">           First visit time</span>
+<span class="sd">        E : list</span>
+<span class="sd">           Last visit time</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------------</span>
+
+<span class="sd">        F : list</span>
+<span class="sd">           First visit times</span>
+<span class="sd">        E : list</span>
+<span class="sd">           Last visit times</span>
+
+<span class="sd">        P and n are contained in the enclosing environment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Mark i as visited</span>
+        <span class="n">F</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c"># For all states</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="c"># if edge from i to j</span>
+            <span class="c"># and j has not been visited</span>
+            <span class="k">if</span> <span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">F</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+                <span class="c">## Add j to list of nodes in component</span>
+                <span class="n">E</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                <span class="n">F</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">visit</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">E</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">E</span><span class="p">)</span>
+
+    <span class="c">## P.T is transpose of P</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">dfs</span><span class="p">(</span><span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c">## Get order of L (yes, it&#39;s kind of round about)</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                   <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">L</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                   <span class="n">reverse</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c">## List of length 0 where all elements are 0</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="c">## a python list like a matlab cell</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c"># I don&#39;t use a counter. Instead I append to the list</span>
+    <span class="c"># and always work with the last element in the list.</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">order</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">F</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+            <span class="c"># add new component to E with root i</span>
+            <span class="n">E</span><span class="o">.</span><span class="n">append</span><span class="p">([[</span><span class="n">i</span><span class="p">],</span> <span class="bp">False</span><span class="p">])</span>
+            <span class="c"># Find descendents of i</span>
+            <span class="n">F</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">visit</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">E</span><span class="p">)</span>
+            <span class="c"># states not in current component</span>
+            <span class="n">not_in_comp</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">j</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">E</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="c"># If all edges to states outside component</span>
+            <span class="c"># are 0, then it is a strongly connected component</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">not_in_comp</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sp</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">P</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">E</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">not_in_comp</span><span class="p">)]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">E</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">E</span>
+</div>
+<div class="viewcode-block" id="eyen"><a class="viewcode-back" href="../index.html#psc585.eyen">[docs]</a><span class="k">def</span> <span class="nf">eyen</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;1-D array of length `n` with zeros except in index `i`&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">i</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">e</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">e</span>
+</div>
+<div class="viewcode-block" id="invariant_direct_solver"><a class="viewcode-back" href="../index.html#psc585.invariant_direct_solver">[docs]</a><span class="k">def</span> <span class="nf">invariant_direct_solver</span><span class="p">(</span><span class="n">P</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Normalize stochastic matrix P and return 1 - normalized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="n">P</span>
+    <span class="n">Q</span><span class="p">[</span> <span class="p">:</span> <span class="p">,</span> <span class="o">-</span><span class="mi">1</span> <span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">eyen</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="tvnorm"><a class="viewcode-back" href="../index.html#psc585.tvnorm">[docs]</a><span class="k">def</span> <span class="nf">tvnorm</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Total variation norm&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="power_iteration"><a class="viewcode-back" href="../index.html#psc585.power_iteration">[docs]</a><span class="k">def</span> <span class="nf">power_iteration</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">10e-16</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Iterative linear solver&quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">tol</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="k">while</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">T</span> <span class="ow">and</span> <span class="n">eps</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">:</span>
+        <span class="c">## dot() is matrix multiplication</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">P</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="n">tvnorm</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x1</span>
+        <span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="multinomial"><a class="viewcode-back" href="../index.html#psc585.multinomial">[docs]</a><span class="k">def</span> <span class="nf">multinomial</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">pvals</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Draw from multinomial</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    u : float</span>
+<span class="sd">        Number in 0, 1 interval</span>
+<span class="sd">    pvals : (k, ) ndarray</span>
+<span class="sd">        Probability mass function of a discrete distribution</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    y : int</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cdf</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">pvals</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">u</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">cdf</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>        
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="p">(</span><span class="n">u</span> <span class="o">&lt;=</span> <span class="n">sp</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">pvals</span><span class="p">))</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">y</span>
+</div>
+<div class="viewcode-block" id="cftp"><a class="viewcode-back" href="../index.html#psc585.cftp">[docs]</a><span class="k">def</span> <span class="nf">cftp</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Single draw with coupling from the past</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    --------------</span>
+<span class="sd">    P : (n, n) ndarray</span>
+<span class="sd">         Transition matrix</span>
+<span class="sd">    T : int</span>
+<span class="sd">        Number of iterations</span>
+<span class="sd">    u : (t &lt;= T, ) ndarray</span>
+<span class="sd">        Draws from a uniform distribution</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----------</span>
+<span class="sd">    X : int</span>
+<span class="sd">        State</span>
+<span class="sd">    T : int</span>
+<span class="sd">        Number of iterations until convergence</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="c">## If u is shorter than T then add new u</span>
+        <span class="k">if</span> <span class="n">T</span> <span class="o">-</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="n">m</span><span class="p">),</span> <span class="n">u</span><span class="p">))</span>
+        <span class="c">## If u is too long, then remove extra entries</span>
+        <span class="k">elif</span> <span class="n">T</span> <span class="o">-</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">u</span><span class="p">[:</span><span class="n">T</span><span class="p">]</span>
+        <span class="c">## Otherwise T = m</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="c">## u is not defined, add new u</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c">## Define state space from P</span>
+    <span class="n">S</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    
+    <span class="c">## P is defined</span>
+    <span class="c">## Define map from P matrix</span>
+    <span class="k">def</span> <span class="nf">phi</span><span class="p">(</span><span class="n">S</span><span class="p">,</span> <span class="n">u</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">multinomial</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">])</span>
+                                   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">S</span><span class="p">]))</span>
+
+    <span class="c">## Initialize X_T = S</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">S</span>
+    <span class="c">## I number them 0 to T because I append</span>
+    <span class="c">## new u&#39;s to the front.</span>
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">phi</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">u</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+
+    <span class="c"># If more than one state in X, call cftp again</span>
+    <span class="c"># Double the length of the chain</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">T</span> <span class="o">=</span> <span class="n">cftp</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">T</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">T</span>
+</div>
+<div class="viewcode-block" id="cftp_sample"><a class="viewcode-back" href="../index.html#psc585.cftp_sample">[docs]</a><span class="k">def</span> <span class="nf">cftp_sample</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sample with coupling from the past</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    P : (N, N) ndarray</span>
+<span class="sd">        Transition matrix</span>
+<span class="sd">    n : int, optional</span>
+<span class="sd">        Number of draws from the distribution</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----------</span>
+<span class="sd">    X : (n, ) ndarray</span>
+<span class="sd">        Draws from the invariant distribution of P</span>
+
+<span class="sd">    Calls `cftp` `n` times to get `n` draws from the</span>
+<span class="sd">    invariant distribution of `P` using the coupling</span>
+<span class="sd">    from the past algorithm.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">cftp</span><span class="p">(</span><span class="n">P</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">)])</span>
+</div>
+<div class="viewcode-block" id="lookahead"><a class="viewcode-back" href="../index.html#psc585.lookahead">[docs]</a><span class="k">class</span> <span class="nc">lookahead</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Look ahead estimator of Markov Chain invariant distribution</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    f : function</span>
+<span class="sd">        Transition function</span>
+<span class="sd">    fsample: function</span>
+<span class="sd">        Function to draw directly from transition function given the current state.</span>
+<span class="sd">    init : (m, ) ndarray</span>
+<span class="sd">        Initial values for each chain. The number of chains to run is</span>
+<span class="sd">        determined by the dimensions of this array.</span>
+<span class="sd">    T : int</span>
+<span class="sd">        Number of iterations to run each chain.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">fsample</span><span class="p">,</span> <span class="n">init</span><span class="p">,</span> <span class="n">T</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsample</span> <span class="o">=</span> <span class="n">fsample</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">T</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">init</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">chains</span> <span class="o">=</span> <span class="n">init</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">T</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+                <span class="n">chains</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="n">fsample</span><span class="p">(</span><span class="n">chains</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">chains</span> <span class="o">=</span> <span class="n">chains</span>
+
+<div class="viewcode-block" id="lookahead.pdf"><a class="viewcode-back" href="../index.html#psc585.lookahead.pdf">[docs]</a>    <span class="k">def</span> <span class="nf">pdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;pdf of invariant distribution</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        s : array</span>
+<span class="sd">            Point</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        p : float</span>
+<span class="sd">            Probability density of the invariant distribution of `f` at `point`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">chains</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">p</span>
+</div></div>
+<div class="viewcode-block" id="newton_cotes"><a class="viewcode-back" href="../index.html#psc585.newton_cotes">[docs]</a><span class="k">def</span> <span class="nf">newton_cotes</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;1-dimensional Newton-Cotes Quadrature Midpoint Rule</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Number of quadrature points.</span>
+<span class="sd">    a : float</span>
+<span class="sd">        Lower bound of interval to integrate over.</span>
+<span class="sd">    b : float</span>
+<span class="sd">        Upper bound of interval to integrate over.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : (n, ) ndarray</span>
+<span class="sd">        Nodes</span>
+<span class="sd">    w : (n, ) ndarray</span>
+<span class="sd">        Weights for each node</span>
+
+<span class="sd">    Quadrature points and weights derived using Newton-Cotes with</span>
+<span class="sd">    the midpoint rule formula.  See Judd, p. 252-253.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">## Width of each interval</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="c">## midpoints of each interval</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">h</span>
+    <span class="c">## weights of each interval</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="newton_cotes_d"><a class="viewcode-back" href="../index.html#psc585.newton_cotes_d">[docs]</a><span class="k">def</span> <span class="nf">newton_cotes_d</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;d-dimensional Newton-Cotes Quadrature</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    --------------</span>
+<span class="sd">    n: (d, ) ndarray</span>
+<span class="sd">        Number of quadrature nodes in each dimension</span>
+<span class="sd">    a: (d, ) ndarray</span>
+<span class="sd">        Lower bound in each dimension</span>
+<span class="sd">    b: (d, ) ndarray</span>
+<span class="sd">        Upper bound in each dimension</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ------------</span>
+<span class="sd">    x : (n.prod(), d) ndarray</span>
+<span class="sd">        Quadrature nodes</span>
+<span class="sd">    w : (n.prod(), ) ndarray</span>
+<span class="sd">        Quadrature weights</span>
+
+<span class="sd">    Generates quadrature nodes and weights in d-dimensions using the</span>
+<span class="sd">    Newton-Cotes midpoint rule.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">## Generate tensor product of nodes and weights</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">b</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">newton_cotes</span><span class="p">(</span><span class="n">ni</span><span class="p">,</span> <span class="n">ai</span><span class="p">,</span> <span class="n">bi</span><span class="p">)</span> <span class="k">for</span> <span class="n">ni</span><span class="p">,</span> <span class="n">ai</span><span class="p">,</span> <span class="n">bi</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)])</span>
+    <span class="c"># Weights </span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">prod</span><span class="p">()</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">w</span><span class="p">)])</span>
+    <span class="c">## X to Cartesian product of points</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">array</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span>
+
+</div>
+<div class="viewcode-block" id="to_discrete"><a class="viewcode-back" href="../index.html#psc585.to_discrete">[docs]</a><span class="k">def</span> <span class="nf">to_discrete</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">qw</span><span class="o">=</span><span class="n">newton_cotes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Discretize Continuous Markov Chain</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -------------</span>
+<span class="sd">    f: function</span>
+<span class="sd">        Transition function.</span>
+<span class="sd">    n: array, shape (d, )</span>
+<span class="sd">        Number of discrete states.</span>
+<span class="sd">    qw: function</span>
+<span class="sd">        Function to use to calculate discrete states.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------------</span>
+<span class="sd">    P : array, (n.prod(), n.prod()) </span>
+<span class="sd">        Discrete Markov chain transition matrix. Where</span>
+<span class="sd">        p_ij in the matrix means p(s_j | s_i).</span>
+<span class="sd">    x : array, shape (n.prod(), d)</span>
+<span class="sd">        quadrature nodes</span>
+<span class="sd">    w : array, shape (n.prod(), )</span>
+<span class="sd">        quadrature weights</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c">## Nodes and weights from a quadrature method</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">qw</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="c"># Create empty matrix with zeros.</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+            <span class="n">si</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">]</span>
+            <span class="n">sj</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">]</span>
+            <span class="n">pij</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">sj</span><span class="p">,</span> <span class="n">si</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">pij</span>
+    <span class="c"># normalize rows to get a stochastic matrix</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">normalize_rows</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">P</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span>
+
+</div>
+<div class="viewcode-block" id="normalize_rows"><a class="viewcode-back" href="../index.html#psc585.normalize_rows">[docs]</a><span class="k">def</span> <span class="nf">normalize_rows</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Normalize array so rows sum to 1&quot;&quot;&quot;</span>
+    <span class="c">## Sum by row</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">axis_sum</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span> <span class="p">]</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span> <span class="p">]</span> <span class="o">/</span> <span class="n">axis_sum</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">b</span>
+
+</div>
+<div class="viewcode-block" id="normalize_cols"><a class="viewcode-back" href="../index.html#psc585.normalize_cols">[docs]</a><span class="k">def</span> <span class="nf">normalize_cols</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Normalize array so columns sum to 1&quot;&quot;&quot;</span>
+
+    <span class="c">## Sum by row</span>
+    <span class="c">## TODO: this function is crap. There must be a faster</span>
+    <span class="c">## or more general way to do this.</span>
+    <span class="c"># If I don&#39;t use copy, then a would be changed in place.</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">axis_sum</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">b</span><span class="p">[:,</span> <span class="n">i</span> <span class="p">]</span> <span class="o">=</span> <span class="n">b</span><span class="p">[</span> <span class="p">:</span> <span class="p">,</span> <span class="n">i</span> <span class="p">]</span> <span class="o">/</span> <span class="n">axis_sum</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">b</span>
+
+</div>
+<div class="viewcode-block" id="invariant_integral"><a class="viewcode-back" href="../index.html#psc585.invariant_integral">[docs]</a><span class="k">def</span> <span class="nf">invariant_integral</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">qw</span><span class="o">=</span><span class="n">newton_cotes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Solve Integral equation by quadrature approximation</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    f : function </span>
+<span class="sd">        State transition function </span>
+<span class="sd">    n : int</span>
+<span class="sd">        Number of quadrature nodes</span>
+<span class="sd">    qw : function, optional</span>
+<span class="sd">        Function to calculate the location and weights of the quadrature nodes</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    --------</span>
+<span class="sd">    g : (n, ) ndarray</span>
+<span class="sd">        Solutions to integral equation</span>
+<span class="sd">    x : (n, ) ndarray</span>
+<span class="sd">        Quadrature nodes </span>
+<span class="sd">    w : (n, ) ndarray</span>
+<span class="sd">        Quadrature weights</span>
+
+<span class="sd">    Solves for g(s) where</span>
+
+<span class="sd">    ..math::</span>
+
+<span class="sd">        g(s&#39;) = \int g(s) f(s&#39;|s) ds</span>
+
+<span class="sd">    with the system of linear equations </span>
+
+<span class="sd">    ..math::</span>
+
+<span class="sd">        g(s_i) = \sum_{j=1}^{n} \frac{g(s_j) f(s_i | s_j) \omega_j}{w(s_j)}, i=1, \dots, n</span>
+
+<span class="sd">    and</span>
+
+<span class="sd">    ..math::</span>
+
+<span class="sd">        \sum_{j=1}^{n} \frac{g(s_j)} \omega_j}{w(s_j)} = 1</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">## Nodes and weights from a quadrature method</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">qw</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="c"># Create empty matrix with zero</span>
+    <span class="c"># Fill in rows 1 to n - 1 </span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">si</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">sj</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">pij</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">si</span><span class="p">,</span> <span class="n">sj</span><span class="p">)</span> <span class="o">*</span> <span class="n">w</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">pij</span>
+    <span class="c">## If I don&#39;t normalize things are funky</span>
+        <span class="c">## P = normalize_cols(P)</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="n">P</span>
+    <span class="n">P</span><span class="p">[</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">:</span> <span class="p">]</span> <span class="o">=</span> <span class="n">w</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">eyen</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="qnwcheb1"><a class="viewcode-back" href="../index.html#psc585.qnwcheb1">[docs]</a><span class="k">def</span> <span class="nf">qnwcheb1</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Univariate Gauss-Chebyshev quadrature nodes and weights</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        number of nodes</span>
+<span class="sd">    a : float</span>
+<span class="sd">        left endpoint</span>
+<span class="sd">    b : float</span>
+<span class="sd">        right endpoint</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ---------</span>
+<span class="sd">    x : array, shape (n,)</span>
+<span class="sd">        nodes</span>
+<span class="sd">    x : array, shape (n,)</span>
+<span class="sd">        weights</span>
+
+<span class="sd">    Port of the qnwcheb1 function in the compecon matlab toolbox.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">+</span> <span class="n">a</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">n</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">w2</span> <span class="o">=</span>  <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.</span> <span class="o">/</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">1</span><span class="p">:(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">3</span><span class="p">:(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span><span class="mi">2</span><span class="p">])]</span>
+    <span class="n">w1</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">n</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">mat</span><span class="p">((</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">mat</span><span class="p">((</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">:</span><span class="mi">2</span><span class="p">])))</span><span class="o">.</span><span class="n">A</span>
+    <span class="n">w0</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">w0</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">w1</span><span class="p">,</span> <span class="n">w2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">w</span>
+</div>
+<div class="viewcode-block" id="qnwnorm1"><a class="viewcode-back" href="../index.html#psc585.qnwnorm1">[docs]</a><span class="k">def</span> <span class="nf">qnwnorm1</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gauss-Hermite normal quadrature nodes and weights</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">orthogonal</span><span class="o">.</span><span class="n">he_roots</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="c">## normalize weights to sum to 1</span>
+    <span class="n">w</span> <span class="o">/=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="qnwnorm"><a class="viewcode-back" href="../index.html#psc585.qnwnorm">[docs]</a><span class="k">def</span> <span class="nf">qnwnorm</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">mu</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">var</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Compute nodes and weights for multivariate normal distribution</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    --------------</span>
+<span class="sd">    n : (d, ) ndarray</span>
+<span class="sd">        Array of the number of quadrature nodes for each dimension.</span>
+<span class="sd">    mu : (d, ) ndarray, optional</span>
+<span class="sd">        Distribution mean</span>
+<span class="sd">    var : (d, d) ndarray, optional</span>
+<span class="sd">        Distribution covariance matrix</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    --------------</span>
+<span class="sd">    x : (n.prod(), d) ndarray</span>
+<span class="sd">        Quadrature nodes.</span>
+<span class="sd">    x : (n.prod(), ) ndarray</span>
+<span class="sd">        Quadrature weights</span>
+
+<span class="sd">    Port of `qnwnorm` function in the compecon matlab toolbox.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mu</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+    <span class="c">## Generate x and w for each dimension </span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">qnwnorm1</span><span class="p">(</span><span class="n">ni</span><span class="p">)</span> <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">n</span><span class="p">])</span>
+    <span class="c">## Generate tensor product of nodes and weights</span>
+    <span class="c"># Weights to product</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">prod</span><span class="p">()</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">w</span><span class="p">)])</span>
+    <span class="c">## x to Cartesian product of points</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">y</span> <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">itertools</span><span class="o">.</span><span class="n">product</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">)])</span>
+    <span class="c"># scipy cholesky decomposition is opposite triangle of matlab</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">la</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">var</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="n">mu</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">real</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="int2binary"><a class="viewcode-back" href="../index.html#psc585.int2binary">[docs]</a><span class="k">def</span> <span class="nf">int2binary</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert integer to binary array</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    x : int</span>
+<span class="sd">    width : int</span>
+<span class="sd">    Width of binary representation.</span>
+<span class="sd">    </span>
+<span class="sd">    Returns</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y : (width, ) ndarray</span>
+<span class="sd">    Vector of boolean values for binary representation.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">conv</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">width</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">fmod</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">conv</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+  </div>
+<div class="viewcode-block" id="binary2int"><a class="viewcode-back" href="../index.html#psc585.binary2int">[docs]</a><span class="k">def</span> <span class="nf">binary2int</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert binary array to integer </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    x : ndarray</span>
+<span class="sd">        Array with the binary representation of a number</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ------------</span>
+<span class="sd">    y : int</span>
+<span class="sd">        Decimal integer</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">conv</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span> <span class="o">*</span> <span class="n">conv</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+</div>
+<div class="viewcode-block" id="ilu0_factor"><a class="viewcode-back" href="../index.html#psc585.ilu0_factor">[docs]</a><span class="k">def</span> <span class="nf">ilu0_factor</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Incomplete LU Factorization</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    a: array, shape (M, M)</span>
+<span class="sd">       Matrix to decompose</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----------</span>
+<span class="sd">    lu : array, shape(M, M)</span>
+<span class="sd">       Matrix containing U in its upper triangle and L in its lower triangle.</span>
+
+<span class="sd">    Uses the ILU(0) algorithm. Algorithm 2.3 in PSC 585 class notes.n</span>
+
+<span class="sd">    There exist other preconditioners in scipy.linalg and scipy.linalg.sparse</span>
+<span class="sd">    but I could not find which one corresponded to ilu(0).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Diagonal must be non-zero for zero-level factorization to work&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">lu</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">lil_matrix</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">aij</span> <span class="o">=</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">aij</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">aij</span>
+                <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="p">:</span>
+                    <span class="n">s</span> <span class="o">-=</span> <span class="p">(</span><span class="n">lu</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">lu</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">k</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;=</span> <span class="n">j</span><span class="p">):</span>
+                    <span class="n">lu</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">):</span>
+                    <span class="n">lu</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span> <span class="o">/</span> <span class="n">lu</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">lu</span>
+
+</div>
+<div class="viewcode-block" id="sparse_power_iteration"><a class="viewcode-back" href="../index.html#psc585.sparse_power_iteration">[docs]</a><span class="k">def</span> <span class="nf">sparse_power_iteration</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">10e-16</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Preconditioned power iteration for a sparse stochastic matrix</span>
+
+<span class="sd">    Paramters</span>
+<span class="sd">    ---------------</span>
+<span class="sd">    P : array, shape (n, n), sparse</span>
+<span class="sd">        transition matrix of a Markov Chain</span>
+<span class="sd">    x : array, shape (n, )</span>
+<span class="sd">        On entry, the initial guess. On exit, the final solution.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">tol</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c"># ILU factorization </span>
+    <span class="n">LU</span> <span class="o">=</span> <span class="n">ilu0_factor</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">LU</span><span class="p">)</span>
+    <span class="n">U</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">LU</span><span class="p">)</span>
+    <span class="c"># New matrix Q</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">Q</span><span class="o">.</span><span class="n">setdiag</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">Q</span><span class="o">.</span><span class="n">diagonal</span><span class="p">())</span>
+    <span class="n">Q</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="nb">iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxiter</span><span class="p">):</span>
+        <span class="c">## dot() is matrix multiplication</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">spla</span><span class="o">.</span><span class="n">spsolve</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="n">spla</span><span class="o">.</span><span class="n">spsolve</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">Q</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+        <span class="n">x</span> <span class="o">-=</span> <span class="n">dx</span>
+        <span class="n">relres</span> <span class="o">=</span> <span class="n">tvnorm</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">relres</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">break</span>
+    <span class="nb">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">relres</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="gjacobi"><a class="viewcode-back" href="../index.html#psc585.gjacobi">[docs]</a><span class="k">def</span> <span class="nf">gjacobi</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span>  <span class="n">maxit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">10e-12</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Gauss-Jacobi iterative linear solver for sparse matrices</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    A : sparse matrix, shape (n, n)</span>
+<span class="sd">        Left hand side of linear system.</span>
+<span class="sd">    b : array, array (n, )</span>
+<span class="sd">        Right hand side of linear system.</span>
+<span class="sd">    x : array, array (n, )</span>
+<span class="sd">        On entry, `x` holds the initial guess. On exit `x` holds the final solution.</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        Requested error tolerance for convergence.</span>
+<span class="sd">    maxit :</span>
+<span class="sd">        Maximum number of iterations.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----------</span>
+<span class="sd">    info : int</span>
+<span class="sd">        Exit status. 0 if converged. -1 if it did not.</span>
+<span class="sd">    iter : int</span>
+<span class="sd">        Number of iterations</span>
+<span class="sd">    relres : float</span>
+<span class="sd">        total variance norm of the final solution.</span>
+
+<span class="sd">    Code based on gjacobi in the compecon Matlab toolbox.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="nb">iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxit</span><span class="p">):</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">A</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">/</span> <span class="n">d</span> 
+        <span class="n">x</span> <span class="o">+=</span> <span class="n">dx</span>
+        <span class="n">relres</span> <span class="o">=</span> <span class="n">tvnorm</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">relres</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">break</span>
+    <span class="nb">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">relres</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="gseidel"><a class="viewcode-back" href="../index.html#psc585.gseidel">[docs]</a><span class="k">def</span> <span class="nf">gseidel</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">maxit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">10e-13</span><span class="p">,</span> <span class="n">relax</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Gauss-Jacobi iterative linear solver for sparse matrices</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ------------</span>
+<span class="sd">    A : sparse matrix, shape (n, n)</span>
+<span class="sd">        Left hand side of linear system.</span>
+<span class="sd">    b : array, array (n, )</span>
+<span class="sd">        Right hand side of linear system.</span>
+<span class="sd">    x : array, array (n, )</span>
+<span class="sd">        On entry, `x` holds the initial guess. On exit `x` holds the final solution.</span>
+<span class="sd">    tol : float, optional</span>
+<span class="sd">        Requested error tolerance for convergence.</span>
+<span class="sd">    maxit : int, optional </span>
+<span class="sd">        Maximum number of iterations.</span>
+<span class="sd">    relax : float, optional</span>
+<span class="sd">        Relaxation parameter. Default is 1 in Gauss-Seidel. Set</span>
+<span class="sd">        to values of less than or greater to 1 for under or over relaxation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----------</span>
+<span class="sd">    info : int</span>
+<span class="sd">        Exit status. 0 if converged. -1 if it did not.</span>
+<span class="sd">    iter : int</span>
+<span class="sd">        Number of iterations</span>
+<span class="sd">    relres : float</span>
+<span class="sd">        total variance norm of the final solution.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    ---------</span>
+<span class="sd">    gjacobi, sparse_power_iteration</span>
+
+
+<span class="sd">    Notes</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    Code based on gseidel in the compecon Matlab toolbox.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="k">for</span> <span class="nb">iter</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxit</span><span class="p">):</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="n">spla</span><span class="o">.</span><span class="n">spsolve</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">A</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">)))</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="n">relax</span> <span class="o">*</span> <span class="n">dx</span>
+        <span class="n">relres</span> <span class="o">=</span> <span class="n">tvnorm</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">relres</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">break</span>
+    <span class="nb">iter</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">relres</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="TestKosaraju"><a class="viewcode-back" href="../index.html#psc585.TestKosaraju">[docs]</a><span class="k">class</span> <span class="nc">TestKosaraju</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Test algorithms against known results</span>
+
+<span class="sd">    Use on command line as py.test dfs.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">P1</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">1.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">1.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.5</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.5</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">1.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">1.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">1.</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.5</span> <span class="p">,</span> <span class="mf">0.5</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">2.</span><span class="o">/</span><span class="mi">3</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="mi">3</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">1.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">,</span> <span class="mf">0.</span> <span class="p">]])</span>
+    <span class="n">P2</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span> <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.05</span><span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.3</span> <span class="p">,</span>  <span class="mf">0.25</span><span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.35</span><span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.4</span> <span class="p">,</span>  <span class="mf">0.05</span><span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.4</span> <span class="p">,</span>  <span class="mf">0.05</span><span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.25</span><span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.2</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.4</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.5</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.4</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.4</span> <span class="p">],</span>
+                   <span class="p">[</span> <span class="mf">0.05</span><span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.4</span> <span class="p">,</span>  <span class="mf">0.1</span> <span class="p">,</span>  <span class="mf">0.05</span><span class="p">,</span>  <span class="mf">0.</span>  <span class="p">,</span>  <span class="mf">0.4</span> <span class="p">,</span>  <span class="mf">0.</span>  <span class="p">]])</span>
+    
+    <span class="k">def</span> <span class="nf">test_P1</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">E1</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="bp">True</span><span class="p">],</span> <span class="p">[[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="bp">False</span><span class="p">],</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="bp">True</span><span class="p">]]</span>
+        <span class="k">assert</span> <span class="n">kosaraju</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P1</span><span class="p">)</span> <span class="o">==</span> <span class="n">E1</span>
+
+    <span class="k">def</span> <span class="nf">test_P2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">E2</span> <span class="o">=</span> <span class="p">[[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="bp">True</span><span class="p">]]</span>
+        <span class="k">assert</span> <span class="n">kosaraju</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P2</span><span class="p">)</span> <span class="o">==</span> <span class="n">E2</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
