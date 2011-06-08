@@ -3,7 +3,7 @@
 import scipy as sp
 from scipy import io
 
-final_data = io.loadmat("FinalData.mat")
+final_data = io.loadmat("FinalData.mat")['data']
 
 class FinalModel(object):
     """
@@ -13,7 +13,7 @@ class FinalModel(object):
 
     delta : float
         Discount factor of the government and provinces
-    gloversigma :
+    g1oversigma :
         Parameter :math:`\sigma_g`
     k : int
         Number of provinces
@@ -37,6 +37,17 @@ class FinalModel(object):
         for k, v in kwargs.iteritems():
             self.__setattr__(k, v)
 
+    _properties = ['delta',
+                   'g1oversigma',
+                   'k',
+                   'm',
+                   'n',
+                   'x',
+                   'y',
+                   'wg',
+                   'D',
+                   'S']
+
     @classmethod
     def from_mat(cls, filename):
         """ Load model data from .mat file"""
@@ -46,6 +57,28 @@ class FinalModel(object):
         kwargs = {}
         for k in keys:
             kwargs[k] = model[[k]][0]
+        for k in ['k', 'm', 'n']:
+            kwargs[k] = int(kwargs[k])
+        for k in ['delta', 'wg', 'g1oversigma']:
+            kwargs[k] = float(kwargs[k])
+        kwargs['S'] = kwargs['S'].astype(int)
         return cls(**kwargs)
+
+    def model(self):
+        """Return model dict"""
+        return dict((k, foo.__getattribute__(k)) for k in foo._properties)  
     
 foo = FinalModel.from_mat("FinalModel.mat")
+print foo.model()
+
+# Initial Conditional Choice probabilities
+Pg = sp.ones((foo.n, foo.k))
+Pg /= Pg.sum(1)[:, newaxis]
+
+Pp = sp.ones((foo.n, 2 * foo.k)) * 0.5
+
+theta = sp.zeros((5, 1))
+
+pytave.feval(2, "NewP", Pp, Pg, theta, foo.model())
+pytave.feval(1, "Phigprov", Pp, Pg, theta, foo.model())
+p

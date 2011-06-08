@@ -6,6 +6,17 @@ x=model.x;
 y=model.y;
 delta=model.delta;
 
+size(Pp)
+size(Pg)
+
+n
+k
+m
+x
+y
+delta
+model
+
 B=zeros(n,k+1);
 P=Ptilde(Pp,Pg,model);
 
@@ -38,3 +49,4 @@ B(:,k+1)=[Zg Eg]*[theta;1];
 %correspond to the k provinces, the k+1 to the government.
 V=(eye(n)-delta*P)\B;
 end
+
