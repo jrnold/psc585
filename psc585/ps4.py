@@ -1,9 +1,12 @@
 import os
 from os import path
-import pytave
 
-_M_FILES = path.abspath(path.join(__path__, "..", "octave"))
-pytave.addpath(_M_FILES)
+import pytave
+import scipy as sp
+from scipy import io
+
+_MFILES = path.abspath(path.join(path.dirname(__file__), "..", "octave"))
+pytave.addpath(_MFILES)
 
 class FinalModel(object):
     """
@@ -66,4 +69,93 @@ class FinalModel(object):
 
     def model(self):
         """Return model dict"""
-        return dict((k, foo.__getattribute__(k)) for k in foo._properties)  
+        return dict((k, self.__getattribute__(k)) for k in self._properties)  
+
+    def new_p(self, Pp, Pg, theta):
+        """ Calculate transition probabilities
+
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        theta : ndarray, shape (5, )
+             Parameters
+
+        Returns
+        ---------
+        Pp : ndarray, shape (n, k)
+             New conditional choice probabilities for provinces
+        Pg : ndarray, shape (n, 2 k)
+             New conditional choice probabilities for the government
+
+        Notes
+        -----------
+
+        Takes conditional choice probabilities :math:`P` and :math:`\theta`
+        as an input and returns new conditional choice values.
+        This is the mapping :math:`\Psi` in part (c) of the assignment.
+
+        This is a wrapper for the matlab function **NewP**.
+        
+        """
+        theta = sp.atleast_2d(theta)
+        return pytave.feval(2, "NewP", Pp, Pg, theta, self.model())
+
+    def phigprov(self, Pp, Pg, theta):
+        """ Calculate transition probabilities
+
+        Parameters
+        ------------
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        theta : ndarray, shape (5, )
+             Parameters
+
+        Returns
+        ---------
+        V : ndarray
+            Observable state values
+
+        Notes
+        -----------
+
+        Takes conditional choice probabilities :math:`P` and :math:`\theta`
+        as an input and returns values :math:`V^`.
+        This is the mapping :math:`\Phi` in part (b) of the assignment.
+
+        This is a wrapper for the matlab function **Phigprov**.
+        
+        """
+        theta = sp.atleast_2d(theta)
+        return pytave.feval(1, "Phigprov", Pp, Pg, theta, self.model())[0]
+
+    def ptilde(self, Pp, Pg):
+        """ Calculate transition probabilities
+
+        Parameters
+        ------------
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        theta : ndarray, shape (5, )
+             Parameters
+
+        Returns
+        ---------
+        P : ndarray
+            Transition probability matrix
+
+        Notes
+        -----------
+
+        Takes conditional choice probabilities :math:`P` as an input and
+        returns the transition matrix :math:`\tilde{P}`.
+
+        This is a wrapper for the matlab function **Ptilde**.
+        
+        """
+        return pytave.feval(1, "Ptilde", Pp, Pg, self.model())[0]
+

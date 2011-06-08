@@ -6,17 +6,6 @@ x=model.x;
 y=model.y;
 delta=model.delta;
 
-size(Pp)
-size(Pg)
-
-n
-k
-m
-x
-y
-delta
-model
-
 B=zeros(n,k+1);
 P=Ptilde(Pp,Pg,model);
 
