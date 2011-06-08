@@ -8,6 +8,10 @@ from scipy import io
 _MFILES = path.abspath(path.join(path.dirname(__file__), "..", "octave"))
 pytave.addpath(_MFILES)
 
+def _pp(i, ai):
+    """Column in Pp for ai"""
+    return (i * 2) + ai
+
 class FinalModel(object):
     """
 
@@ -34,6 +38,11 @@ class FinalModel(object):
         Matrix of distances between provinces
     S : ndarray, shape (n, k)
         transition matrix
+    data : ndarray, shape (T, k + 2)
+        Data, as in FinalData.mat. The first column records the state :math:`l, s`,
+        enumerated according to the order of the coordinates. The last column contains
+        the actions of the government. The :math:`k` middle columns contain the
+        actions of the provinces.
 
     """
     def __init__(self, **kwargs):
@@ -52,19 +61,34 @@ class FinalModel(object):
                    'S']
 
     @classmethod
-    def from_mat(cls, filename):
-        """ Load model data from .mat file"""
-        final_model = io.loadmat("FinalModel.mat", squeeze_me = True)
-        model = final_model['model']
-        keys = model.dtype.names
+    def from_mat(cls, model, data):
+        """ Instantiate class from .mat files
+
+        Parameters
+        -------------
+        model : string
+              Path to FinalModel.dat
+        data : string
+              Path to FinalData.mat
+
+        Returns
+        ---------
+        obj : FinalModel
+              Instance of the FinalModel class
+
+        """
+        final_model = io.loadmat(model, squeeze_me = True)['model']
+        keys = final_model.dtype.names
         kwargs = {}
         for k in keys:
-            kwargs[k] = model[[k]][0]
+            kwargs[k] = final_model[[k]][0]
         for k in ['k', 'm', 'n']:
             kwargs[k] = int(kwargs[k])
         for k in ['delta', 'wg', 'g1oversigma']:
             kwargs[k] = float(kwargs[k])
         kwargs['S'] = kwargs['S'].astype(int)
+        final_data = io.loadmat(data)['data']
+        kwargs['data'] = final_data
         return cls(**kwargs)
 
     def model(self):
@@ -140,8 +164,6 @@ class FinalModel(object):
              Conditional choice probabilities for provinces
         Pg : ndarray, shape (n, 2 k)
              Conditional choice probabilities for the government
-        theta : ndarray, shape (5, )
-             Parameters
 
         Returns
         ---------
@@ -159,3 +181,79 @@ class FinalModel(object):
         """
         return pytave.feval(1, "Ptilde", Pp, Pg, self.model())[0]
 
+    def ptilde_i(self, Pp, Pg, i, ai):
+        """ Transition probabilities conditional on player i's action
+
+        Parameters
+        ------------
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        i : int, 1 to k
+            Province 
+        ai : int, bool
+            Province i's action :math:`a_i`
+
+        Returns
+        ---------
+        P : ndarray
+            Transition probability matrix
+
+        Notes
+        ---------
+
+        This method calculates :math:`\tilde{P}^P_i(a_i)`, the
+        transition matrix with probabilities :math:`\tilde{p}^P_i(l', s' | l, s, a_i)`.
+
+        This is calculated by taking the matrix Pp, and replacing the
+        columns corresponding to player :math:`i`'s actions assuming that player :math:`i`
+        plays action :math:`a_i`.  This new probability matrix is then used
+        as an input to :py:func:`psc585.PS4.FinalModel.ptilde`.
+        
+        """
+        Ppi = Pp.copy()
+        Ppi[: , _pp(i, 0)] = float((1 - ai) % 2)   # =1 when ai=0, =1 when ai=1
+        Ppi[: , _pp(i, 1)] = float((2 - ai) % 2)   # =1 when ai=1, =0, when ai=0
+        P = self.ptilde(Ppi, Pg)
+        return P
+
+    def y_d(self):
+        """ Data matrix Y_d
+
+        Returns
+        --------
+        y : ndarray, shape (k*T, )
+            Matrix :math:`Y_d`
+
+
+        Notes
+        ----------
+
+        Calculates the :math:`k * T \times 1` matrix :math:`Y_d` in part (e) of
+        the assignment. 
+
+        """
+        y = self.data[:, 1:-1].ravel("F")
+        return y
+
+    def E_i(self, Pp, Pg):
+        """ Calculate E_i^P
+        """
+        pass
+
+    def Z_i(self, Pp, Pg):
+        """ Calculate Z_i^P
+        """
+        pass
+
+    def C_d(self):
+        """ Calculate C_d """
+        pass
+
+    def W_d(self):
+        """ Calculate W_d """
+        pass
+    
+
+    

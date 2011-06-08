@@ -10,7 +10,7 @@ from psc585 import ps4
 
 final_data = io.loadmat("FinalData.mat")['data']
     
-foo = ps4.FinalModel.from_mat("FinalModel.mat")
+foo = ps4.FinalModel.from_mat("FinalModel.mat", "FinalData.mat")
 print foo.model()
 
 # Initial Conditional Choice probabilities
@@ -21,7 +21,14 @@ Pp = sp.ones((foo.n, 2 * foo.k)) * 0.5
 
 theta = sp.zeros((5, 1))
 
+## Y_d matrix
+## Actions of provinces in the data
+## (T * k ) x 1 matrix
+Yd = foo.data[:, 1:-1].ravel("F")
+
+
 foo.new_p(Pp, Pg, theta)
 foo.phigprov(Pp, Pg, theta)
-foo.ptilde(Pp, Pg)
+P = foo.ptilde(Pp, Pg)
+Pi = foo.ptilde_i(Pp, Pg, 0, 1)
 
