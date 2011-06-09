@@ -4,6 +4,7 @@ from os import path
 import pytave
 import scipy as sp
 from scipy import io
+from scipy import linalg as la
 
 _MFILES = path.abspath(path.join(path.dirname(__file__), "..", "octave"))
 pytave.addpath(_MFILES)
@@ -361,19 +362,133 @@ class FinalModel(object):
         Z = self.Zia(Pg, i, 1) * Pp[:, _pp(i, 1)][:, sp.newaxis]
         return Z
 
-    def W_i(self, Pp, Pg, i):
-        pass
+    def Wi(self, Pp, Pg, i):
+        """ Compute matrix W_i^P
 
-    def C_i(self, Pp, Pg, i):
-        pass
+        Parameters
+        -------------
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+        i : int, 1 to k
+            Province 
 
-    def C_d(self):
-        """ Calculate C_d """
-        pass
+        Returns
+        ------------
+        W : ndarray, shape (n, 5)
+           Values of :math:`W_i^P`
 
-    def W_d(self):
-        """ Calculate W_d """
-        pass
+        Notes
+        -----------
+
+        .. math::
+
+           W_i^P = (Z^P_i(1) + \delta (\tilde{P}^P_i(0) - \tilde{P}^P_i(0))(I - \delta \tilde{P}^P)^{-1} - Z^P_i)
+
+        """
+        Zi1 = self.Zia(Pg, i, 1)
+        Z = self.Zi(Pg, Pp, i)
+        idp_inv = la.inv(sp.eye(self.n) - self.delta * self.ptilde(Pp, Pg))
+        dpp = self.delta * (self.ptilde_i(Pp, Pg, i, 1) -
+                            self.ptilde_i(Pp, Pg, i, 0))
+        W = (Zi1 + self.delta * dpp.dot(idp_inv).dot(Z))
+        return W
+
+    def Ci(self, Pp, Pg, i):
+        """ Compute matrix C_i^P
+
+        Parameters
+        -------------
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+        i : int, 1 to k
+            Province 
+
+        Returns
+        ------------
+        C : ndarray, shape (n,)
+            Values of :math:`C_i^P`
+
+        Notes
+        -----------
+
+        .. math::
+
+           C_i^P = \delta (\tilde{P}_i^P(1)  - \tilde{P}_i^P(0))(1 - \delta \tilde{P}^P)^{-1} E_i^P
+
+        """
+        idp_inv = la.inv(sp.eye(self.n) - self.delta * self.ptilde(Pp, Pg))
+        dpp = self.delta * (self.ptilde_i(Pp, Pg, i, 1) -
+                            self.ptilde_i(Pp, Pg, i, 0))
+        E = self.Ei(Pp, i)
+        C = self.delta * dpp.dot(idp_inv).dot(E)
+        return C
+
+    def C_d(self, Pp, Pg):
+        """ Compute matrix C_d
+
+        Parameters
+        -------------
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+
+        Returns
+        ------------
+        C : ndarray, shape (n,)
+            Values of :math:`C_d`
+
+        Notes
+        ---------
+
+        .. math::
+
+           C_d(i * T + t, :) = C_i^P(l^t, s^t)
+
+        The matrix `C_d` stacks entries from `C_i^P` by
+        province and state in the **data** property.
+
+
+        """
+        ls = self.data[:, 0]
+        C = sp.concatenate([self.Ci(Pp, Pg, i)[ls, ]
+                            for i in range(self.k)])
+        return C
+
+    def W_d(self, Pp, Pg):
+        """ Calculate matrix W_d
+
+        Parameters
+        -------------
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+
+        Returns
+        ------------
+        W : ndarray, shape (n,)
+            Values of :math:`W_d`
+
+        Notes
+        ---------
+
+        ... math::
+
+            W_d(i * T + t, :) = W_i^P(l^t, s^t)
+
+        The matrix `W_d` concatenates rows of `W_i^P` by
+        province and state in the **data** property.
+
+        """
+        ls = self.data[:, 0]
+        W = sp.concatenate([self.Wi(Pp, Pg, i)[ls, ]
+                            for i in range(self.k)], axis=0)
+        return W
 
 
     

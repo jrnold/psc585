@@ -34,8 +34,9 @@ Z1 = foo.Zia(Pg, 0, 1)
 Z0 = foo.Zia(Pg, 0, 0)
 Z = foo.Zi(Pg, Pp, 0)
 
+Wi = foo.Wi(Pp, Pg, 0)
+Ci = foo.Ci(Pp, Pg, 0)
 
-
-
-
+C = foo.C_d(Pp, Pg)
+W = foo.W_d(Pp, Pg)
 
