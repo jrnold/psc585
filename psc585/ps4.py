@@ -1,10 +1,14 @@
 import os
 from os import path
 
+
 import pytave
 import scipy as sp
 from scipy import io
 from scipy import linalg as la
+from  rpy2 import robjects
+import rpy2.robjects.numpy2ri
+from rpy2.robjects.packages import importr
 
 _MFILES = path.abspath(path.join(path.dirname(__file__), "..", "octave"))
 pytave.addpath(_MFILES)
@@ -12,6 +16,17 @@ pytave.addpath(_MFILES)
 def _pp(i, a):
     """Column in Pp for ai"""
     return (i * 2) + a
+
+def _logit(y, x, offset):
+    """ Wrapper for logit used in FinalModel.argmax_theta """
+    ## Uses R for the glm function. 
+    stats = importr("stats")
+    fmla = robjects.Formula('y ~ x - 1')
+    env = fmla.environment
+    env['y'] = y
+    env['x'] = x
+    results = stats.glm(fmla, family="binomial", offset=offset)
+    return sp.asarray(results.rx2('coefficients'))
 
 class FinalModel(object):
     """
@@ -89,7 +104,10 @@ class FinalModel(object):
             kwargs[k] = float(kwargs[k])
         kwargs['S'] = kwargs['S'].astype(int)
         final_data = io.loadmat(data)['data']
-        kwargs['data'] = final_data
+        ## adjust states and provinces to be 0 indexed
+        final_data[:, 0] -= 1
+        final_data[:, -1] -= 1
+        kwargs['data'] = final_data.astype(int)
         return cls(**kwargs)
 
     def model(self):
@@ -99,6 +117,9 @@ class FinalModel(object):
     def new_p(self, Pp, Pg, theta):
         """ Calculate transition probabilities
 
+        Parameters
+        --------------
+        
         Pp : ndarray, shape (n, k)
              Conditional choice probabilities for provinces
         Pg : ndarray, shape (n, 2 k)
@@ -490,5 +511,77 @@ class FinalModel(object):
                             for i in range(self.k)], axis=0)
         return W
 
+    def argmax_theta(self, Pp, Pg):
+        """ Maximize partial pseudo-likelihood of theta
 
-    
+        Parameters
+        -------------
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces. Initial guess.
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government. Initial guess.
+
+        Returns
+        ---------
+        theta : ndarray (5, 1)
+            Parameter estimates
+
+        Notes
+        ---------
+
+        Implements the partial pseudo-likelihood algorithm in part (e) of
+        the assignment.
+        
+        """
+        C = self.C_d(Pp, Pg)
+        W = self.W_d(Pp, Pg)
+        Y = self.y_d()
+        theta = _logit(Y, W, C)[:, sp.newaxis]
+        return theta
+
+    def npl(self, Pp, Pg, tol = 1e-13, maxit=100):
+        """ Nested-pseudo likelihood Estimator
+
+        Parameters
+        -------------
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces. Initial guess.
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government. Initial guess.
+        tol : float, optional
+             Convergence tolerance
+        maxit : int, optional
+             Maximum number of iterations
+
+        Returns
+        ----------
+        theta : ndarray, shape (5, 1)
+             Parameter estimates
+        converge : bool
+             Did the estimates converge?
+        i : int
+             Number of iterations
+        relres : float
+             Relative residual at the end of the iterations
+
+        Notes
+        -----------
+
+        Implements part (d) of the assignement.
+
+        """
+        converge = False
+        relres = sp.inf
+        theta = sp.zeros((5, 1))
+        for t in range(maxit):
+            theta_old = theta.copy()
+            # Step ii
+            theta = self.argmax_theta(Pp, Pg)
+            # Step iii
+            Pp, Pg = self.new_p(Pp, Pg, theta)
+            # check for convergence
+            relres = la.norm(theta - theta_old)
+            if i > 0 and relres < tol:
+                converge = True
+                break
+        return (theta, converge, t, relres)
