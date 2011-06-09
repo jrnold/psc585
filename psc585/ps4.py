@@ -8,9 +8,9 @@ from scipy import io
 _MFILES = path.abspath(path.join(path.dirname(__file__), "..", "octave"))
 pytave.addpath(_MFILES)
 
-def _pp(i, ai):
+def _pp(i, a):
     """Column in Pp for ai"""
-    return (i * 2) + ai
+    return (i * 2) + a
 
 class FinalModel(object):
     """
@@ -237,14 +237,134 @@ class FinalModel(object):
         y = self.data[:, 1:-1].ravel("F")
         return y
 
-    def E_i(self, Pp, Pg):
-        """ Calculate E_i^P
+    def Ei_ai(self, Pp, i, a):
+        """ Calculate E_i^P(a_i)
+
+        Parameters
+        -----------
+        i : int, 1 to k
+            Province 
+        a : int,
+            Action. 0 or 1.
+
+        Returns
+        -----------
+        Ei : ndarray, shape (n, )
+             Values of :math:`E_i^P(a_i, l, s) in part (b)
+
+        Notes
+        ---------
+
+        .. math::
+
+           E_i^P(a_i, l, s) = - \log(P_i[ a_i | l, s])
+
         """
+        ## Probably could be a separate function
+        return - sp.log(Pp[:, _pp(i, a)])
+
+
+    def Ei(self, Pp, i):
+        """ Calculate E_i^P
+
+        Parameters
+        -------------
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+        i : int, 1 to k
+            Province 
+
+        Returns
+        -----------
+        Ei : ndarray, shape (n, )
+             Values of :math:`E_i^P(l, a)` in part (b)
+
+        Notes
+        ----------
+        
+        .. math::
+                        
+           E_i^P(l, s) = \sum_{a=0}^1 P_i[a | l, s] E_i^P(a, l, s)
+
+        """
+        E = sp.vstack((self.Ei_ai(Pp, i, 1), self.Ei_ai(Pp, i, 0))).T
+        W = sp.vstack((Pp[:, _pp(i, 1)], Pp[:, _pp(i, 1)])).T
+        return (E * W).sum(1)
+
+    def Zia(self, Pg, i, a):
+        """ Calculate Z_i^P(a_i)
+
+        Parameters
+        -------------
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        i : int, 1 to k
+            Province 
+        a : int
+            Action of player :math:`i`. 0 or 1.
+
+        Returns
+        -----------
+        Z : ndarray, shape (n, 5)
+            Values of :math:`Z_i^P(a_i, l, s)` in part (b)
+
+        Notes
+        --------
+
+        .. math::
+
+           Z_i^P(a_i, l, s) = (1, x_i, -(1 - s_i) - P_g(i | l, s), -P_g(i | l, s) y_i)
+
+        if :math:`a_i = 1` and 0 if :math:`a_i = 0`.
+        
+        """
+        if a :
+            x = self.x[i]
+            y = self.y[i]
+            s = self.S[:, i]
+            pg_i = Pg[:, i]
+            Z = sp.ones((self.n, 5))
+            Z[:, 1] = x
+            Z[:, 2] = -(1 - s)
+            Z[:, 3] = -pg_i
+            Z[:, 4] = -pg_i * y
+        else:
+            Z = sp.zeros((self.n, 5))
+        return Z
+
+    def Zi(self, Pg, Pp, i):
+        """ Calculate Z_i^P
+
+        Parameters
+        -------------
+        Pg : ndarray, shape (n, 2 k)
+             Conditional choice probabilities for the government
+        Pp : ndarray, shape (n, k)
+             Conditional choice probabilities for provinces
+        i : int, 1 to k
+            Province 
+
+        Returns
+        -------------
+        Z : ndarray, shape (n, 5)
+            Values of :math:`Z_i^P` from part (b).
+
+        Notes
+        -------------
+
+        .. math::
+
+           Z_i^P = \sum_{a=0}^1 P_i[a | l, s] Z_i^P(a, l, s)
+        
+        """
+        ## I can ignore Zia(Pg, i, 0) because it is always 0
+        Z = self.Zia(Pg, i, 1) * Pp[:, _pp(i, 1)][:, sp.newaxis]
+        return Z
+
+    def W_i(self, Pp, Pg, i):
         pass
 
-    def Z_i(self, Pp, Pg):
-        """ Calculate Z_i^P
-        """
+    def C_i(self, Pp, Pg, i):
         pass
 
     def C_d(self):
@@ -254,6 +374,6 @@ class FinalModel(object):
     def W_d(self):
         """ Calculate W_d """
         pass
-    
+
 
     
