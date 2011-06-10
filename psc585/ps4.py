@@ -2,7 +2,6 @@
 import os
 from os import path
 
-
 import pytave
 import scipy as sp
 from scipy import io
@@ -24,9 +23,11 @@ def _logit(y, x, offset):
     stats = importr("stats")
     fmla = robjects.Formula('y ~ x - 1')
     env = fmla.environment
-    env['y'] = y
-    env['x'] = x
-    results = stats.glm(fmla, family="binomial", offset=offset)
+    env['y'] = robjects.IntVector(y)
+    env['x'] =  robjects.r.matrix(robjects.FloatVector(x.flatten('F')),
+                                  ncol=x.shape[1])
+    results = stats.glm(fmla, family="binomial",
+                        offset=robjects.FloatVector(offset))
     return sp.asarray(results.rx2('coefficients'))
 
 class FinalModel(object):
@@ -541,7 +542,7 @@ class FinalModel(object):
         theta = _logit(Y, W, C)[:, sp.newaxis]
         return theta
 
-    def npl(self, Pp, Pg, tol = 1e-13, maxit=100):
+    def npl(self, Pp, Pg, tol = 1e-13, maxit=100, verbose=False):
         """ Nested-pseudo likelihood Estimator
 
         Parameters
@@ -554,6 +555,8 @@ class FinalModel(object):
              Convergence tolerance
         maxit : int, optional
              Maximum number of iterations
+        verbose : bool, optional
+             Print iterations
 
         Returns
         ----------
@@ -561,7 +564,7 @@ class FinalModel(object):
              Parameter estimates
         converge : bool
              Did the estimates converge?
-        i : int
+        t : int
              Number of iterations
         relres : float
              Relative residual at the end of the iterations
@@ -583,7 +586,10 @@ class FinalModel(object):
             Pp, Pg = self.new_p(Pp, Pg, theta)
             # check for convergence
             relres = la.norm(theta - theta_old)
-            if i > 0 and relres < tol:
+            if verbose:
+                print ("%d %f" % (t, relres))
+                print theta.squeeze()
+            if t > 0 and relres < tol:
                 converge = True
                 break
-        return (theta, converge, t, relres)
+        return (theta, converge, t + 1, relres)
