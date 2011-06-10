@@ -1,8 +1,5 @@
-"""
-Translated from BargModel.m by libermate, and then
-manually cleaned.
+""" Problem Set 3 specific code"""
 
-""" 
 import numpy as np
 import scipy as sp
 from scipy import linalg as la
@@ -10,8 +7,8 @@ from scipy import linalg as la
 class BargModel(object):
     """ Bargaining model
 
-    Returns
-    ---------
+    Attributes
+    ----------
     
     c : int
        Coalition specific payoff (constant)
@@ -310,7 +307,7 @@ class BargModel(object):
         Parameters
         ------------
         y : ndarray, shape (155, )
-           Initial parameter guess
+           Initial parameter guess. Changed in place.
         tol : float
            Tolerance for convergence
         maxit : int
@@ -327,10 +324,6 @@ class BargModel(object):
         i : int
            Number of iterations
 
-        Side Effects
-        -------------
-        
-        y is changed in place.
 
         """
         if tol is None:
@@ -354,7 +347,7 @@ class BargModel(object):
         Parameters
         -----------
         y : ndarray, shape (155, )
-            initial parameter.
+            Initial parameters. Updated in place.
         glb : float
             Gamma-step lower bound, between 0 and 1.
         gub : float
@@ -371,11 +364,6 @@ class BargModel(object):
         i : int
             Number of iterations
 
-        Side Effects
-        -------------
-        y : ndarray, shape (155, )
-            Updates the parameter array in place.
-            
         """
         gamma = gub
         i = 0

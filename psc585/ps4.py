@@ -1,3 +1,4 @@
+""" Problem Set 4 specific code"""
 import os
 from os import path
 
@@ -16,12 +17,12 @@ def _pp(i, a):
 class FinalModel(object):
     """
 
-    Properties
+    Attributes
     -----------------
 
     delta : float
         Discount factor of the government and provinces
-    g1oversigma :
+    g1oversigma : float
         Parameter :math:`\sigma_g`
     k : int
         Number of provinces
@@ -40,10 +41,11 @@ class FinalModel(object):
     S : ndarray, shape (n, k)
         transition matrix
     data : ndarray, shape (T, k + 2)
-        Data, as in FinalData.mat. The first column records the state :math:`l, s`,
-        enumerated according to the order of the coordinates. The last column contains
-        the actions of the government. The :math:`k` middle columns contain the
-        actions of the provinces.
+        Data, as in FinalData.mat. The first column records the state
+        :math:`l, s`, enumerated according to the order of the
+        coordinates. The last column contains the actions of the
+        government. The :math:`k` middle columns contain the actions
+        of the provinces.
 
     """
     def __init__(self, **kwargs):
@@ -147,7 +149,7 @@ class FinalModel(object):
         -----------
 
         Takes conditional choice probabilities :math:`P` and :math:`\theta`
-        as an input and returns values :math:`V^`.
+        as an input and returns values :math:`V^P`.
         This is the mapping :math:`\Phi` in part (b) of the assignment.
 
         This is a wrapper for the matlab function **Phigprov**.
@@ -477,8 +479,8 @@ class FinalModel(object):
         Notes
         ---------
 
-        ... math::
-
+        .. math::
+        
             W_d(i * T + t, :) = W_i^P(l^t, s^t)
 
         The matrix `W_d` concatenates rows of `W_i^P` by

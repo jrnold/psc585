@@ -127,7 +127,7 @@ def quadratic_utility(x, y):
 class Legislature(object):
     """Legislature in problem 3
 
-    Parameters
+    Attributes
     -----------
     x : (m, d) ndarray
          Ideal points of legislators
@@ -206,11 +206,6 @@ def _setdiff(x, y):
 class Provinces(object):
     """Provinces in problem 4
 
-    Parameters
-    ------------
-    D : (k, k) ndarray
-        Matrix of distances between provinces
-
     Attributes
     -------------
     D : (k, k) ndarray
@@ -228,6 +223,12 @@ class Provinces(object):
     """
 
     def __init__(self, D):
+        """
+        Parameters
+        ------------
+        D : (k, k) ndarray
+             Matrix of distances between provinces
+        """
         self.D = D
         self.k = D.shape[0]
         self.dmax = D.max()

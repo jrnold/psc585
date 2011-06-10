@@ -80,7 +80,7 @@ def dfs(P, order=None):
 def kosaraju(P):
     """ Kosaraju's Algorithm for Strongly Connected Components
     
-    Arguments
+    Parameters
     ----------
     
     P : array, shape (n, n)
@@ -843,7 +843,7 @@ def ilu0_factor(a):
 def sparse_power_iteration(P, x, tol=10e-16, maxiter=200):
     """Preconditioned power iteration for a sparse stochastic matrix
 
-    Paramters
+    Parameters
     ---------------
     P : array, shape (n, n), sparse
         transition matrix of a Markov Chain
