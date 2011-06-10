@@ -1,0 +1,694 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psc585.ps4 &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="../../index.html" />
+    <link rel="up" title="psc585" href="../psc585.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../psc585.html" accesskey="U">psc585</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for psc585.ps4</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; Problem Set 4 specific code&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span>
+
+<span class="kn">import</span> <span class="nn">pytave</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">io</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">la</span>
+<span class="kn">from</span>  <span class="nn">rpy2</span> <span class="kn">import</span> <span class="n">robjects</span>
+<span class="kn">import</span> <span class="nn">rpy2.robjects.numpy2ri</span>
+<span class="kn">from</span> <span class="nn">rpy2.robjects.packages</span> <span class="kn">import</span> <span class="n">importr</span>
+
+<span class="n">_MFILES</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">),</span> <span class="s">&quot;..&quot;</span><span class="p">,</span> <span class="s">&quot;octave&quot;</span><span class="p">))</span>
+<span class="n">pytave</span><span class="o">.</span><span class="n">addpath</span><span class="p">(</span><span class="n">_MFILES</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_pp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Column in Pp for ai&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span>
+
+<span class="k">def</span> <span class="nf">_logit</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Wrapper for logit used in FinalModel.argmax_theta &quot;&quot;&quot;</span>
+    <span class="c">## Uses R for the glm function. </span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">importr</span><span class="p">(</span><span class="s">&quot;stats&quot;</span><span class="p">)</span>
+    <span class="n">fmla</span> <span class="o">=</span> <span class="n">robjects</span><span class="o">.</span><span class="n">Formula</span><span class="p">(</span><span class="s">&#39;y ~ x - 1&#39;</span><span class="p">)</span>
+    <span class="n">env</span> <span class="o">=</span> <span class="n">fmla</span><span class="o">.</span><span class="n">environment</span>
+    <span class="n">env</span><span class="p">[</span><span class="s">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">robjects</span><span class="o">.</span><span class="n">IntVector</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">env</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">robjects</span><span class="o">.</span><span class="n">r</span><span class="o">.</span><span class="n">matrix</span><span class="p">(</span><span class="n">robjects</span><span class="o">.</span><span class="n">FloatVector</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="s">&#39;F&#39;</span><span class="p">)),</span>
+                                  <span class="n">ncol</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">glm</span><span class="p">(</span><span class="n">fmla</span><span class="p">,</span> <span class="n">family</span><span class="o">=</span><span class="s">&quot;binomial&quot;</span><span class="p">,</span>
+                        <span class="n">offset</span><span class="o">=</span><span class="n">robjects</span><span class="o">.</span><span class="n">FloatVector</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">rx2</span><span class="p">(</span><span class="s">&#39;coefficients&#39;</span><span class="p">))</span>
+
+<div class="viewcode-block" id="FinalModel"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel">[docs]</a><span class="k">class</span> <span class="nc">FinalModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    -----------------</span>
+
+<span class="sd">    delta : float</span>
+<span class="sd">        Discount factor of the government and provinces</span>
+<span class="sd">    g1oversigma : float</span>
+<span class="sd">        Parameter :math:`\sigma_g`</span>
+<span class="sd">    k : int</span>
+<span class="sd">        Number of provinces</span>
+<span class="sd">    m : int</span>
+<span class="sd">        Number of states that provinces can take, :math:`2^k`</span>
+<span class="sd">    n : int</span>
+<span class="sd">        Number of states, :math:`k 2^k`</span>
+<span class="sd">    x : ndarray, shape (k, )</span>
+<span class="sd">        Variable correlated with the wealth generated by each province</span>
+<span class="sd">    y : ndarray, shape (k, )</span>
+<span class="sd">        Variable correlated with the cost of war to each province</span>
+<span class="sd">    wg : float</span>
+<span class="sd">        Government war cost</span>
+<span class="sd">    D : ndarray, shape (k, k)</span>
+<span class="sd">        Matrix of distances between provinces</span>
+<span class="sd">    S : ndarray, shape (n, k)</span>
+<span class="sd">        transition matrix</span>
+<span class="sd">    data : ndarray, shape (T, k + 2)</span>
+<span class="sd">        Data, as in FinalData.mat. The first column records the state</span>
+<span class="sd">        :math:`l, s`, enumerated according to the order of the</span>
+<span class="sd">        coordinates. The last column contains the actions of the</span>
+<span class="sd">        government. The :math:`k` middle columns contain the actions</span>
+<span class="sd">        of the provinces.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__setattr__</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="n">_properties</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;delta&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;g1oversigma&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;k&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;m&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;n&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;x&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;y&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;wg&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;D&#39;</span><span class="p">,</span>
+                   <span class="s">&#39;S&#39;</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FinalModel.from_mat"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.from_mat">[docs]</a>    <span class="k">def</span> <span class="nf">from_mat</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Instantiate class from .mat files</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        model : string</span>
+<span class="sd">              Path to FinalModel.dat</span>
+<span class="sd">        data : string</span>
+<span class="sd">              Path to FinalData.mat</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        obj : FinalModel</span>
+<span class="sd">              Instance of the FinalModel class</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">final_model</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">squeeze_me</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)[</span><span class="s">&#39;model&#39;</span><span class="p">]</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="n">final_model</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">names</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_model</span><span class="p">[[</span><span class="n">k</span><span class="p">]][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="s">&#39;m&#39;</span><span class="p">,</span> <span class="s">&#39;n&#39;</span><span class="p">]:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;delta&#39;</span><span class="p">,</span> <span class="s">&#39;wg&#39;</span><span class="p">,</span> <span class="s">&#39;g1oversigma&#39;</span><span class="p">]:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;S&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;S&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">final_data</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="s">&#39;data&#39;</span><span class="p">]</span>
+        <span class="c">## adjust states and provinces to be 0 indexed</span>
+        <span class="n">final_data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">final_data</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">final_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FinalModel.model"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.model">[docs]</a>    <span class="k">def</span> <span class="nf">model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return model dict&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__getattribute__</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_properties</span><span class="p">)</span>  
+</div>
+<div class="viewcode-block" id="FinalModel.new_p"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.new_p">[docs]</a>    <span class="k">def</span> <span class="nf">new_p</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate transition probabilities</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        --------------</span>
+<span class="sd">        </span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+<span class="sd">        theta : ndarray, shape (5, )</span>
+<span class="sd">             Parameters</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             New conditional choice probabilities for provinces</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             New conditional choice probabilities for the government</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        Takes conditional choice probabilities :math:`P` and :math:`\theta`</span>
+<span class="sd">        as an input and returns new conditional choice values.</span>
+<span class="sd">        This is the mapping :math:`\Psi` in part (c) of the assignment.</span>
+
+<span class="sd">        This is a wrapper for the matlab function **NewP**.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pytave</span><span class="o">.</span><span class="n">feval</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;NewP&quot;</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">())</span>
+</div>
+<div class="viewcode-block" id="FinalModel.phigprov"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.phigprov">[docs]</a>    <span class="k">def</span> <span class="nf">phigprov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate transition probabilities</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+<span class="sd">        theta : ndarray, shape (5, )</span>
+<span class="sd">             Parameters</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        V : ndarray</span>
+<span class="sd">            Observable state values</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        Takes conditional choice probabilities :math:`P` and :math:`\theta`</span>
+<span class="sd">        as an input and returns values :math:`V^P`.</span>
+<span class="sd">        This is the mapping :math:`\Phi` in part (b) of the assignment.</span>
+
+<span class="sd">        This is a wrapper for the matlab function **Phigprov**.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pytave</span><span class="o">.</span><span class="n">feval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Phigprov&quot;</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="FinalModel.ptilde"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.ptilde">[docs]</a>    <span class="k">def</span> <span class="nf">ptilde</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate transition probabilities</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        P : ndarray</span>
+<span class="sd">            Transition probability matrix</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        Takes conditional choice probabilities :math:`P` as an input and</span>
+<span class="sd">        returns the transition matrix :math:`\tilde{P}`.</span>
+
+<span class="sd">        This is a wrapper for the matlab function **Ptilde**.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">pytave</span><span class="o">.</span><span class="n">feval</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Ptilde&quot;</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="FinalModel.ptilde_i"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.ptilde_i">[docs]</a>    <span class="k">def</span> <span class="nf">ptilde_i</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">ai</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Transition probabilities conditional on player i&#39;s action</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+<span class="sd">        i : int, 1 to k</span>
+<span class="sd">            Province </span>
+<span class="sd">        ai : int, bool</span>
+<span class="sd">            Province i&#39;s action :math:`a_i`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        P : ndarray</span>
+<span class="sd">            Transition probability matrix</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        ---------</span>
+
+<span class="sd">        This method calculates :math:`\tilde{P}^P_i(a_i)`, the</span>
+<span class="sd">        transition matrix with probabilities :math:`\tilde{p}^P_i(l&#39;, s&#39; | l, s, a_i)`.</span>
+
+<span class="sd">        This is calculated by taking the matrix Pp, and replacing the</span>
+<span class="sd">        columns corresponding to player :math:`i`&#39;s actions assuming that player :math:`i`</span>
+<span class="sd">        plays action :math:`a_i`.  This new probability matrix is then used</span>
+<span class="sd">        as an input to :py:func:`psc585.PS4.FinalModel.ptilde`.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Ppi</span> <span class="o">=</span> <span class="n">Pp</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">Ppi</span><span class="p">[:</span> <span class="p">,</span> <span class="n">_pp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">ai</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span>   <span class="c"># =1 when ai=0, =1 when ai=1</span>
+        <span class="n">Ppi</span><span class="p">[:</span> <span class="p">,</span> <span class="n">_pp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">((</span><span class="mi">2</span> <span class="o">-</span> <span class="n">ai</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span><span class="p">)</span>   <span class="c"># =1 when ai=1, =0, when ai=0</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ptilde</span><span class="p">(</span><span class="n">Ppi</span><span class="p">,</span> <span class="n">Pg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">P</span>
+</div>
+<div class="viewcode-block" id="FinalModel.y_d"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.y_d">[docs]</a>    <span class="k">def</span> <span class="nf">y_d</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Data matrix Y_d</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">        y : ndarray, shape (k*T, )</span>
+<span class="sd">            Matrix :math:`Y_d`</span>
+
+
+<span class="sd">        Notes</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        Calculates the :math:`k * T \times 1` matrix :math:`Y_d` in part (e) of</span>
+<span class="sd">        the assignment. </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="s">&quot;F&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span>
+</div>
+<div class="viewcode-block" id="FinalModel.Ei_ai"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.Ei_ai">[docs]</a>    <span class="k">def</span> <span class="nf">Ei_ai</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate E_i^P(a_i)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        i : int, 1 to k</span>
+<span class="sd">            Province </span>
+<span class="sd">        a : int,</span>
+<span class="sd">            Action. 0 or 1.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Ei : ndarray, shape (n, )</span>
+<span class="sd">             Values of :math:`E_i^P(a_i, l, s) in part (b)</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        ---------</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           E_i^P(a_i, l, s) = - \log(P_i[ a_i | l, s])</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">## Probably could be a separate function</span>
+        <span class="k">return</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">Pp</span><span class="p">[:,</span> <span class="n">_pp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">)])</span>
+
+</div>
+<div class="viewcode-block" id="FinalModel.Ei"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.Ei">[docs]</a>    <span class="k">def</span> <span class="nf">Ei</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate E_i^P</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+<span class="sd">        i : int, 1 to k</span>
+<span class="sd">            Province </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Ei : ndarray, shape (n, )</span>
+<span class="sd">             Values of :math:`E_i^P(l, a)` in part (b)</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        ----------</span>
+<span class="sd">        </span>
+<span class="sd">        .. math::</span>
+<span class="sd">                        </span>
+<span class="sd">           E_i^P(l, s) = \sum_{a=0}^1 P_i[a | l, s] E_i^P(a, l, s)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">Ei_ai</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ei_ai</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">Pp</span><span class="p">[:,</span> <span class="n">_pp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span> <span class="n">Pp</span><span class="p">[:,</span> <span class="n">_pp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]))</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">E</span> <span class="o">*</span> <span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="FinalModel.Zia"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.Zia">[docs]</a>    <span class="k">def</span> <span class="nf">Zia</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate Z_i^P(a_i)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+<span class="sd">        i : int, 1 to k</span>
+<span class="sd">            Province </span>
+<span class="sd">        a : int</span>
+<span class="sd">            Action of player :math:`i`. 0 or 1.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Z : ndarray, shape (n, 5)</span>
+<span class="sd">            Values of :math:`Z_i^P(a_i, l, s)` in part (b)</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           Z_i^P(a_i, l, s) = (1, x_i, -(1 - s_i) - P_g(i | l, s), -P_g(i | l, s) y_i)</span>
+
+<span class="sd">        if :math:`a_i = 1` and 0 if :math:`a_i = 0`.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">a</span> <span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">S</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">pg_i</span> <span class="o">=</span> <span class="n">Pg</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+            <span class="n">Z</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="n">Z</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span>
+            <span class="n">Z</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">pg_i</span>
+            <span class="n">Z</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">pg_i</span> <span class="o">*</span> <span class="n">y</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Z</span>
+</div>
+<div class="viewcode-block" id="FinalModel.Zi"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.Zi">[docs]</a>    <span class="k">def</span> <span class="nf">Zi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate Z_i^P</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+<span class="sd">        i : int, 1 to k</span>
+<span class="sd">            Province </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Z : ndarray, shape (n, 5)</span>
+<span class="sd">            Values of :math:`Z_i^P` from part (b).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -------------</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           Z_i^P = \sum_{a=0}^1 P_i[a | l, s] Z_i^P(a, l, s)</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">## I can ignore Zia(Pg, i, 0) because it is always 0</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Zia</span><span class="p">(</span><span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">Pp</span><span class="p">[:,</span> <span class="n">_pp</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)][:,</span> <span class="n">sp</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Z</span>
+</div>
+<div class="viewcode-block" id="FinalModel.Wi"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.Wi">[docs]</a>    <span class="k">def</span> <span class="nf">Wi</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Compute matrix W_i^P</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+<span class="sd">        i : int, 1 to k</span>
+<span class="sd">            Province </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------------</span>
+<span class="sd">        W : ndarray, shape (n, 5)</span>
+<span class="sd">           Values of :math:`W_i^P`</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           W_i^P = (Z^P_i(1) + \delta (\tilde{P}^P_i(0) - \tilde{P}^P_i(0))(I - \delta \tilde{P}^P)^{-1} - Z^P_i)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">Zi1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Zia</span><span class="p">(</span><span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Zi</span><span class="p">(</span><span class="n">Pg</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">idp_inv</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ptilde</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">))</span>
+        <span class="n">dpp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ptilde_i</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">ptilde_i</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="p">(</span><span class="n">Zi1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">*</span> <span class="n">dpp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">idp_inv</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Z</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">W</span>
+</div>
+<div class="viewcode-block" id="FinalModel.Ci"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.Ci">[docs]</a>    <span class="k">def</span> <span class="nf">Ci</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Compute matrix C_i^P</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+<span class="sd">        i : int, 1 to k</span>
+<span class="sd">            Province </span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------------</span>
+<span class="sd">        C : ndarray, shape (n,)</span>
+<span class="sd">            Values of :math:`C_i^P`</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           C_i^P = \delta (\tilde{P}_i^P(1)  - \tilde{P}_i^P(0))(1 - \delta \tilde{P}^P)^{-1} E_i^P</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">idp_inv</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">ptilde</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">))</span>
+        <span class="n">dpp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ptilde_i</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">ptilde_i</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Ei</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delta</span> <span class="o">*</span> <span class="n">dpp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">idp_inv</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">C</span>
+</div>
+<div class="viewcode-block" id="FinalModel.C_d"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.C_d">[docs]</a>    <span class="k">def</span> <span class="nf">C_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Compute matrix C_d</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------------</span>
+<span class="sd">        C : ndarray, shape (n,)</span>
+<span class="sd">            Values of :math:`C_d`</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        ---------</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">           C_d(i * T + t, :) = C_i^P(l^t, s^t)</span>
+
+<span class="sd">        The matrix `C_d` stacks entries from `C_i^P` by</span>
+<span class="sd">        province and state in the **data** property.</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">Ci</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">)[</span><span class="n">ls</span><span class="p">,</span> <span class="p">]</span>
+                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)])</span>
+        <span class="k">return</span> <span class="n">C</span>
+</div>
+<div class="viewcode-block" id="FinalModel.W_d"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.W_d">[docs]</a>    <span class="k">def</span> <span class="nf">W_d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Calculate matrix W_d</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------------</span>
+<span class="sd">        W : ndarray, shape (n,)</span>
+<span class="sd">            Values of :math:`W_d`</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        ---------</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">        </span>
+<span class="sd">            W_d(i * T + t, :) = W_i^P(l^t, s^t)</span>
+
+<span class="sd">        The matrix `W_d` concatenates rows of `W_i^P` by</span>
+<span class="sd">        province and state in the **data** property.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">Wi</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">i</span><span class="p">)[</span><span class="n">ls</span><span class="p">,</span> <span class="p">]</span>
+                            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">W</span>
+</div>
+<div class="viewcode-block" id="FinalModel.argmax_theta"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.argmax_theta">[docs]</a>    <span class="k">def</span> <span class="nf">argmax_theta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Maximize partial pseudo-likelihood of theta</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces. Initial guess.</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government. Initial guess.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ---------</span>
+<span class="sd">        theta : ndarray (5, 1)</span>
+<span class="sd">            Parameter estimates</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        ---------</span>
+
+<span class="sd">        Implements the partial pseudo-likelihood algorithm in part (e) of</span>
+<span class="sd">        the assignment.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">C_d</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">)</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">W_d</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_d</span><span class="p">()</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">_logit</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">C</span><span class="p">)[:,</span> <span class="n">sp</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">theta</span>
+</div>
+<div class="viewcode-block" id="FinalModel.npl"><a class="viewcode-back" href="../../api/ps4.html#psc585.ps4.FinalModel.npl">[docs]</a>    <span class="k">def</span> <span class="nf">npl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">tol</span> <span class="o">=</span> <span class="mf">1e-13</span><span class="p">,</span> <span class="n">maxit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Nested-pseudo likelihood Estimator</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        Pp : ndarray, shape (n, k)</span>
+<span class="sd">             Conditional choice probabilities for provinces. Initial guess.</span>
+<span class="sd">        Pg : ndarray, shape (n, 2 k)</span>
+<span class="sd">             Conditional choice probabilities for the government. Initial guess.</span>
+<span class="sd">        tol : float, optional</span>
+<span class="sd">             Convergence tolerance</span>
+<span class="sd">        maxit : int, optional</span>
+<span class="sd">             Maximum number of iterations</span>
+<span class="sd">        verbose : bool, optional</span>
+<span class="sd">             Print iterations</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        theta : ndarray, shape (5, 1)</span>
+<span class="sd">             Parameter estimates</span>
+<span class="sd">        converge : bool</span>
+<span class="sd">             Did the estimates converge?</span>
+<span class="sd">        t : int</span>
+<span class="sd">             Number of iterations</span>
+<span class="sd">        relres : float</span>
+<span class="sd">             Relative residual at the end of the iterations</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----------</span>
+
+<span class="sd">        Implements part (d) of the assignement.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">converge</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">relres</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxit</span><span class="p">):</span>
+            <span class="n">theta_old</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="c"># Step ii</span>
+            <span class="n">theta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argmax_theta</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">)</span>
+            <span class="c"># Step iii</span>
+            <span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">new_p</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span>
+            <span class="c"># check for convergence</span>
+            <span class="n">relres</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">theta</span> <span class="o">-</span> <span class="n">theta_old</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span> <span class="p">(</span><span class="s">&quot;</span><span class="si">%d</span><span class="s"> </span><span class="si">%f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">relres</span><span class="p">))</span>
+                <span class="k">print</span> <span class="n">theta</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">relres</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="n">converge</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">converge</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">relres</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../psc585.html" >psc585</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
