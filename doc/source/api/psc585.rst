@@ -1,5 +1,0 @@
-psc585
-===============
-
-.. automodule:: psc585
-   :members:
