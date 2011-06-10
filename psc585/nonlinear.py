@@ -283,3 +283,4 @@ def ncpsolve(f, a, b, x, tol=10e-13, maxsteps=10, maxit=100, usesmooth=True, **k
         x += dx
 
     return x, fval
+

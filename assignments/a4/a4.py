@@ -18,25 +18,7 @@ Pg /= Pg.sum(1)[:, newaxis]
 
 Pp = sp.ones((foo.n, 2 * foo.k)) * 0.5
 
-theta = sp.zeros((5, 1))
+theta0 = sp.ones((5, 1))
 
-## Y_d matrix
-## Actions of provinces in the data
-## (T * k ) x 1 matrix
-
-foo.new_p(Pp, Pg, theta)
-foo.phigprov(Pp, Pg, theta)
-P = foo.ptilde(Pp, Pg)
-Pi = foo.ptilde_i(Pp, Pg, 0, 1)
-Eiai = foo.Ei_ai(Pp, 0, 1)
-Ei = foo.Ei(Pp, 0)
-Z1 = foo.Zia(Pg, 0, 1)
-Z0 = foo.Zia(Pg, 0, 0)
-Z = foo.Zi(Pg, Pp, 0)
-
-Wi = foo.Wi(Pp, Pg, 0)
-Ci = foo.Ci(Pp, Pg, 0)
-
-C = foo.C_d(Pp, Pg)
-W = foo.W_d(Pp, Pg)
-
+results = foo.argmax_theta(Pp, Pg)
+theta = foo.npl(Pp, Pg)
