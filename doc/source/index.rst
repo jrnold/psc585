@@ -21,6 +21,17 @@ Assignments
 Code
 =================
 
+.. toctree::
+   
+   api/psc585
+   api/dp
+   api/markov
+   api/nonlinear
+   api/ps1
+   api/ps2
+   api/ps3
+   api/ps4
+
 
 Indices and tables
 ==================
