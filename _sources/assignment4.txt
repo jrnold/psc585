@@ -26,7 +26,7 @@ model is below,
 
 After 100 iterations, the results have not converged.  These
 are the values of :math:`theta` and the relative residual
-for the last 20 iterations.  The values of :math:`theta_3:5` appear
+for the last 20 iterations.  The values of :math:`theta_{3:5}` appear
 to be cycling around a value, and slowly converging.
 
 ::
