@@ -443,23 +443,28 @@ class FinalModel(object):
         Notes
         -------
 
+        If state (l, s) is observed in the data, set the value of P to the observed
+        probability conditional on that state.  If state (l, s) not observed
+        in the data, set the probability for each action to the unconditional
+        probability for that player.
+
         Suggested by Brenton.
 
-        
-
         """
+        _MIN = 0.01
+        _MAX = 0.99
         T = self.data.shape[0]
         ## Actions of government in T x k matrix with binary entries
         ag = sp.zeros((T, self.k))
         ag[sp.r_[:T], self.data[:, -1]] = 1
         ## Unconditional average action for government
-        meanPgls = ag.sum(0) / T
+        meanPgls = ag.mean(0)
         ## Initial values of Pg
-        Pg = meanPgls[:, sp.newaxis].repeat(T, axis=1).T
+        Pg = meanPgls[:, sp.newaxis].repeat(self.n, axis=1).T
         ## Unconditional average action for provinces
-        meanPpls = self.data[:, 1:-1].sum(0).astype(float) / T
+        meanPpls = self.data[:, 1:-1].mean(0)
         ## Initial values of Pp
-        Pp = meanPgls[:, sp.newaxis].repeat(T, axis=1).T
+        Pp = meanPgls[:, sp.newaxis].repeat(self.n, axis=1).T
         ## If state (ls) observed in data
         ## set values of Pp and Pg to observed mean
         for ls in range(self.n):
@@ -468,6 +473,11 @@ class FinalModel(object):
             if isls.any():
                 Pp[ls, ] = self.data[isls, 1:-1].mean(0)
                 Pg[ls, ] = ag[isls, :].mean(0)
+        ## I cannot have 0 or 1s in the initla values
+        Pg = sp.maximum(sp.minimum(Pg, _MAX), _MIN)
+        Pg /= Pg.sum(1)[:, sp.newaxis]
+        Pp = sp.maximum(sp.minimum(Pp, _MAX), _MIN)
+        Pp = sp.vstack((1 - Pp, Pp)).reshape((self.n, self.k * 2), order='F')
         return (Pp, Pg)
 
     def Ci(self, Pp, Pg, i):
