@@ -9,8 +9,6 @@ from scipy import random
 import psc585
 from psc585 import ps4
 
-final_data = io.loadmat("FinalData.mat")['data']
-    
 foo = ps4.FinalModel.from_mat("FinalModel.mat", "FinalData.mat")
 
 random.seed(4403205)

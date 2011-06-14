@@ -31,7 +31,7 @@ def _logit(y, x, offset):
     return sp.asarray(results.rx2('coefficients'))
 
 class FinalModel(object):
-    """
+    """ Province revolt game
 
     Attributes
     -----------------
@@ -62,6 +62,12 @@ class FinalModel(object):
         coordinates. The last column contains the actions of the
         government. The :math:`k` middle columns contain the actions
         of the provinces.
+
+    Notes
+    ----------
+
+    This class contains the data and functions to solve the game between
+    the provinces and government described in assignment 4.
 
     """
     def __init__(self, **kwargs):
@@ -107,7 +113,7 @@ class FinalModel(object):
             kwargs[k] = float(kwargs[k])
         kwargs['S'] = kwargs['S'].astype(int)
         final_data = io.loadmat(data)['data']
-        ## adjust states and provinces to be 0 indexed
+        ## adjust (l, s) and a_g columns to 0-indexing
         final_data[:, 0] -= 1
         final_data[:, -1] -= 1
         kwargs['data'] = final_data.astype(int)
@@ -199,7 +205,7 @@ class FinalModel(object):
         -----------
 
         Takes conditional choice probabilities :math:`P` as an input and
-        returns the transition matrix :math:`\tilde{P}`.
+        returns the transition matrix :math:`\\tilde{P}`.
 
         This is a wrapper for the matlab function **Ptilde**.
         
@@ -228,8 +234,8 @@ class FinalModel(object):
         Notes
         ---------
 
-        This method calculates :math:`\tilde{P}^P_i(a_i)`, the
-        transition matrix with probabilities :math:`\tilde{p}^P_i(l', s' | l, s, a_i)`.
+        This method calculates :math:`\\tilde{P}^P_i(a_i)`, the
+        transition matrix with probabilities :math:`\\tilde{p}^P_i(l', s' | l, s, a_i)`.
 
         This is calculated by taking the matrix Pp, and replacing the
         columns corresponding to player :math:`i`'s actions assuming that player :math:`i`
@@ -286,7 +292,7 @@ class FinalModel(object):
 
         """
         ## Probably could be a separate function
-        return - sp.log(Pp[:, _pp(i, a)])
+        return -sp.log(Pp[:, _pp(i, a)])
 
 
     def Ei(self, Pp, i):
@@ -419,7 +425,7 @@ class FinalModel(object):
 
         .. math::
 
-           W_i^P = (Z^P_i(1) + \delta (\tilde{P}^P_i(0) - \tilde{P}^P_i(0))(I - \delta \tilde{P}^P)^{-1} - Z^P_i)
+           W_i^P = (Z^P_i(1) + \delta (\\tilde{P}^P_i(0) - \\tilde{P}^P_i(0))(I - \delta \\tilde{P}^P)^{-1} - Z^P_i)
 
         """
         Zi1 = self.Zia(Pg, i, 1)
@@ -429,6 +435,39 @@ class FinalModel(object):
                             self.ptilde_i(Pp, Pg, i, 0))
         W = (Zi1 + self.delta * dpp.dot(idp_inv).dot(Z))
         return W
+
+    def initprob(self):
+        """ Calculate initial conditional probabilities based on observed data
+
+        Notes
+        -------
+
+        Suggested by Brenton.
+
+        
+
+        """
+        T = self.data.shape[0]
+        ## Actions of government in T x k matrix with binary entries
+        ag = sp.zeros((T, self.k))
+        ag[sp.r_[:T], self.data[:, -1]] = 1
+        ## Unconditional average action for government
+        meanPgls = ag.sum(0) / T
+        ## Initial values of Pg
+        Pg = meanPgls[:, sp.newaxis].repeat(T, axis=1).T
+        ## Unconditional average action for provinces
+        meanPpls = self.data[:, 1:-1].sum(0).astype(float) / T
+        ## Initial values of Pp
+        Pp = meanPgls[:, sp.newaxis].repeat(T, axis=1).T
+        ## If state (ls) observed in data
+        ## set values of Pp and Pg to observed mean
+        for ls in range(self.n):
+            ## Which state
+            isls = (self.data[:, 0] == ls)
+            if isls.any():
+                Pp[ls, ] = self.data[isls, 1:-1].mean(0)
+                Pg[ls, ] = ag[isls, :].mean(0)
+        return (Pp, Pg)
 
     def Ci(self, Pp, Pg, i):
         """ Compute matrix C_i^P
@@ -490,9 +529,22 @@ class FinalModel(object):
 
         """
         ls = self.data[:, 0]
-        C = sp.concatenate([self.Ci(Pp, Pg, i)[ls, ]
+        C = sp.concatenate([self.Ci(Pp, Pg, i)[ls]
                             for i in range(self.k)])
         return C
+
+    def _C(self, Pp, Pg):
+        """ Calculate C 
+        """
+        return sp.vstack([self.Ci(Pp, Pg, i)
+                          for i in range(self.k)]).T
+
+    def _W(self, Pp, Pg):
+        """ Calculate W
+        """
+        W = sp.concatenate([self.Wi(Pp, Pg, i)
+                            for i in range(self.k)], axis=1)
+        return W
 
     def W_d(self, Pp, Pg):
         """ Calculate matrix W_d
