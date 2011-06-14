@@ -4,17 +4,18 @@ Assignment 3
 This is my write-up for :download:`Assignment 3 <./pdf/PSC585Ex3.pdf>`.
 
 Since **BargModel.m** creates a structure, I implemented the
-bargaining model data-structure as a Python class with the same
-properties as the matlab structure.  Initializing this class takes the
-same arguments as the matlab function **BargModel.m** and performs the
-similar computations.
+bargaining model data-structure as a Python class,
+:py:class:`~psc585.ps3.BargModel`, with the same properties as the
+matlab structure.  Initializing this class takes the same arguments as
+the matlab function **BargModel.m** and performs the similar
+computations.
 
-The :py:func:`psc585.ps3.BargModel.func` evaluates the nonlinear
+The method :py:meth:`~psc585.ps3.BargModel.func` evaluates the nonlinear
 system of functions, and is a port of the matlab function **BargF3**.
 I tested the results from this function against results from the
 matlab code to ensure its correctness.
 
-The following code generates a :py:class:`psc585.ps3.BargModel` object. 
+The following code generates a :py:class:`~psc585.ps3.BargModel` object. 
 
 .. literalinclude:: ../../assignments/a3/a3.py
    :lines: 2-23

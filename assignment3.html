@@ -53,22 +53,23 @@
             
   <div class="section" id="assignment-3">
 <h1>Assignment 3<a class="headerlink" href="#assignment-3" title="Permalink to this headline">¶</a></h1>
-<p>This is my write-up for <a class="reference download internal" href="_downloads/PSC585Ex3.pdf"><tt class="xref download docutils literal"><span class="pre">Assignment</span> <span class="pre">3</span></tt></a>.</p>
+<p>This is my write-up for <a class="reference download internal" href="_downloads/PSC585Ex31.pdf"><tt class="xref download docutils literal"><span class="pre">Assignment</span> <span class="pre">3</span></tt></a>.</p>
 <p>Since <strong>BargModel.m</strong> creates a structure, I implemented the
-bargaining model data-structure as a Python class with the same
-properties as the matlab structure.  Initializing this class takes the
-same arguments as the matlab function <strong>BargModel.m</strong> and performs the
-similar computations.</p>
-<p>The <a class="reference internal" href="api/ps3.html#psc585.ps3.BargModel.func" title="psc585.ps3.BargModel.func"><tt class="xref py py-func docutils literal"><span class="pre">psc585.ps3.BargModel.func()</span></tt></a> evaluates the nonlinear
+bargaining model data-structure as a Python class,
+<a class="reference internal" href="api/ps3.html#psc585.ps3.BargModel" title="psc585.ps3.BargModel"><tt class="xref py py-class docutils literal"><span class="pre">BargModel</span></tt></a>, with the same properties as the
+matlab structure.  Initializing this class takes the same arguments as
+the matlab function <strong>BargModel.m</strong> and performs the similar
+computations.</p>
+<p>The method <a class="reference internal" href="api/ps3.html#psc585.ps3.BargModel.func" title="psc585.ps3.BargModel.func"><tt class="xref py py-meth docutils literal"><span class="pre">func()</span></tt></a> evaluates the nonlinear
 system of functions, and is a port of the matlab function <strong>BargF3</strong>.
 I tested the results from this function against results from the
 matlab code to ensure its correctness.</p>
-<p>The following code generates a <a class="reference internal" href="api/ps3.html#psc585.ps3.BargModel" title="psc585.ps3.BargModel"><tt class="xref py py-class docutils literal"><span class="pre">psc585.ps3.BargModel</span></tt></a> object.</p>
+<p>The following code generates a <a class="reference internal" href="api/ps3.html#psc585.ps3.BargModel" title="psc585.ps3.BargModel"><tt class="xref py py-class docutils literal"><span class="pre">BargModel</span></tt></a> object.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">la</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">io</span>
 
-<span class="kn">import</span> <span class="nn">psc585.ps3</span>
+<span class="kn">from</span> <span class="nn">psc585</span> <span class="kn">import</span> <span class="n">ps3</span>
 
 <span class="n">Cs</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">loadmat</span><span class="p">(</span><span class="s">&quot;Cs.mat&quot;</span><span class="p">)[</span><span class="s">&quot;Cs&quot;</span><span class="p">]</span>
 <span class="n">ideals</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="mi">4</span><span class="p">],</span>
@@ -85,7 +86,7 @@ matlab code to ensure its correctness.</p>
 <span class="n">c</span> <span class="o">=</span> <span class="mf">45.</span>
 <span class="c"># Utility constant</span>
 <span class="n">K</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">psc585</span><span class="o">.</span><span class="n">ps3</span><span class="o">.</span><span class="n">BargModel</span><span class="p">(</span><span class="n">ideals</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">Cs</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ps3</span><span class="o">.</span><span class="n">BargModel</span><span class="p">(</span><span class="n">ideals</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">Cs</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="section" id="part-a">
@@ -118,7 +119,7 @@ I quarantined it to the function <a class="reference internal" href="api/ps3.htm
     <span class="n">lam0</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span> <span class="o">*</span> <span class="o">-</span><span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">c</span><span class="p">)</span>
     <span class="c"># if m_i = i</span>
     <span class="n">lam0</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="n">lam0</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">lam0</span><span class="p">,</span> <span class="p">(</span><span class="n">lam0</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">lam0</span> <span class="o">=</span> <span class="n">lam0</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">lam0</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="p">))</span>
     <span class="c"># x_0</span>
     <span class="n">x0</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">ideals</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="p">))</span>
     <span class="c"># \mu_0</span>
@@ -141,7 +142,7 @@ I quarantined it to the function <a class="reference internal" href="api/ps3.htm
 </pre></div>
 </div>
 <p>I create the initial values and confirm that <img class="math" src="_images/math/88561acaf3cc21a54bb2682576bc9120db958725.png" alt="f(y_0, c_0) = 0"/>.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">y0</span> <span class="o">=</span> <span class="n">make_y0</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">y0</span> <span class="o">=</span> <span class="n">ps3</span><span class="o">.</span><span class="n">make_y0</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 <span class="k">print</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">y0</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">inf</span><span class="p">)</span>
 </pre></div>
 </div>
