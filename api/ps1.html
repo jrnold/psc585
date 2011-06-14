@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psc585.ps1 &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="../index.html" />
+    <link rel="next" title="psc585.ps2" href="ps2.html" />
+    <link rel="prev" title="psc585.nonlinear" href="nonlinear.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ps2.html" title="psc585.ps2"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nonlinear.html" title="psc585.nonlinear"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-psc585.ps1">
+<span id="psc585-ps1"></span><h1>psc585.ps1<a class="headerlink" href="#module-psc585.ps1" title="Permalink to this headline">¶</a></h1>
+<p>Problem Set 1: Markov Chains</p>
+<dl class="class">
+<dt id="psc585.ps1.Legislature">
+<em class="property">class </em><tt class="descclassname">psc585.ps1.</tt><tt class="descname">Legislature</tt><big>(</big><em>x</em>, <em>ufunc=&lt;function quadratic_utility at 0x3abc6e0&gt;</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#Legislature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.Legislature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Legislature in problem 3</p>
+<p class="rubric">Notes</p>
+<p>This class contains a set of legislators with d-dimensional ideal points,
+and a utility function.  It includes methods to compare two policies given
+the legislators&#8217; ideal points.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="5%" />
+<col width="19%" />
+<col width="76%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>x</td>
+<td>(m, d) ndarray</td>
+<td>Ideal points of legislators</td>
+</tr>
+<tr><td>ufunc</td>
+<td>function, optional</td>
+<td>Function to calculate the utility of a policy relative to an ideal point</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="psc585.ps1.Legislature.majpref">
+<tt class="descname">majpref</tt><big>(</big><em>p</em>, <em>q</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#Legislature.majpref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.Legislature.majpref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Is policy p majority preferred to q</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.ps1.Legislature.transition">
+<tt class="descname">transition</tt><big>(</big><em>S</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#Legislature.transition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.Legislature.transition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a transition matrix for a Markov Chain</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>S</strong> : (n, d) ndarray</p>
+<blockquote>
+<div><p>n points on a d-dimensional policy space</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>P</strong> : (n, n) ndarray</p>
+<blockquote class="last">
+<div><p>Transition matrix. There is an equal probability of
+transitioning to any point</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Right now this is VERY slow because this function
+finds the majority preferred policies by checking every
+other policy and returning a dense matrix.  There is
+probably a better way to implement this.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.ps1.Legislature.votes">
+<tt class="descname">votes</tt><big>(</big><em>p</em>, <em>q</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#Legislature.votes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.Legislature.votes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Votes of legislature on p versus status quo q</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.ps1.Legislature.yeas">
+<tt class="descname">yeas</tt><big>(</big><em>p</em>, <em>q</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#Legislature.yeas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.Legislature.yeas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of yeas on p compared to status quo q</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psc585.ps1.Provinces">
+<em class="property">class </em><tt class="descclassname">psc585.ps1.</tt><tt class="descname">Provinces</tt><big>(</big><em>D</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#Provinces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.Provinces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provinces in problem 4</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="25%" />
+<col width="66%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>D</td>
+<td>(k, k) ndarray</td>
+<td>Matrix of distances between provinces</td>
+</tr>
+<tr><td>k</td>
+<td>int</td>
+<td>Number of provinces</td>
+</tr>
+<tr><td>dmax</td>
+<td>int</td>
+<td>Maximum distance between provinces.</td>
+</tr>
+<tr><td>maxstate</td>
+<td>int</td>
+<td>Maximum state. States are numbered 0 to <img class="math" src="../_images/math/767b7dc4a8df95a9f8a0faa3bb155e7b49943407.png" alt="2^k"/>.</td>
+</tr>
+<tr><td>P</td>
+<td>(2^k, 2^k) sparse array</td>
+<td>Transition matrix of the Markov chain of revolt probabilities
+for each province.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.ps1.p2a_f">
+<tt class="descclassname">psc585.ps1.</tt><tt class="descname">p2a_f</tt><big>(</big><em>sprime</em>, <em>s</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#p2a_f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.p2a_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Problem 2.a, function f</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>sprime</strong> : float</p>
+<blockquote>
+<div><p>State transitioning to. Between 0 and 1.</p>
+</div></blockquote>
+<p><strong>s</strong> : float</p>
+<blockquote>
+<div><p>State transitioning from. Between 0 and 1.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>p</strong> : float</p>
+<blockquote class="last">
+<div><p>Transition probability.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Continuous Markov chain on the unit interval <img class="math" src="../_images/math/ab178d831a786b92cb4c9ddc2d33578223036f98.png" alt="[0, 1]"/>,</p>
+<div class="math">
+<p><img src="../_images/math/9c4118e893769a23047f1002fa67dcfc23f714a3.png" alt="f(s' | s) = B(a(s), b(s)) s'^{(a(s) - 1)} (1 - s')^{(b(s) - 1)}" /></p>
+</div><p>where <img class="math" src="../_images/math/f78c2ff11e89b6573c28475f44551fb4c5cfccba.png" alt="a(s) = 2 + 50 s^{10}"/>  and <img class="math" src="../_images/math/12a0a8fc0e92234a01bebfa46d8469b8fe646317.png" alt="b(s) = 2 + 50 (1 - s)^{10}"/></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.ps1.p2c_f">
+<tt class="descclassname">psc585.ps1.</tt><tt class="descname">p2c_f</tt><big>(</big><em>sprime</em>, <em>s</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#p2c_f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.p2c_f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Problem 2.c, function f</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>sprime</strong> : array, shape (2, )</p>
+<blockquote>
+<div><p>State transitioning to</p>
+</div></blockquote>
+<p><strong>s</strong> : array, shape (2, )</p>
+<blockquote>
+<div><p>State transitioning from</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>p</strong> : float</p>
+<blockquote class="last">
+<div><p>Transition probability</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<div class="math">
+<p><img src="../_images/math/42fd2ba466ae3ef5db4336389fcd6db76ed3452e.png" alt="(s' |s) = N((\alpha_1 s_1 , \alpha_2 (s_1 + s_2 )), I_2)" /></p>
+</div><p>where <img class="math" src="../_images/math/8566a7b27bf59888ff4714767bf820b226a6848f.png" alt="\alpha_1 = 0.3"/> and <img class="math" src="../_images/math/9976697a167b46e3f43112c809be83251a9aa547.png" alt="\alpha_2 = 0.6"/>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.ps1.p2c_f_sample">
+<tt class="descclassname">psc585.ps1.</tt><tt class="descname">p2c_f_sample</tt><big>(</big><em>s</em>, <em>size=1</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#p2c_f_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.p2c_f_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sample from transition function in problem 2.c</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>s</strong> : (2,) ndarray</p>
+<blockquote>
+<div><p>Current state</p>
+</div></blockquote>
+<p><strong>size</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of samples to draw</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first last"><strong>sprime</strong> : (size, 2) ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#psc585.ps1.p2c_f" title="psc585.ps1.p2c_f"><tt class="xref py py-obj docutils literal"><span class="pre">p2c_f</span></tt></a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.ps1.quadratic_utility">
+<tt class="descclassname">psc585.ps1.</tt><tt class="descname">quadratic_utility</tt><big>(</big><em>x</em>, <em>y</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps1.html#quadratic_utility"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps1.quadratic_utility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quadratic utility function</p>
+<p class="rubric">Notes</p>
+<div class="math">
+<p><img src="../_images/math/3771536acc0c7f0f4ed248ede072668865a778d2.png" alt="u(x, y) = - \sum_{i=1}^n (x_i - y_i)^2" /></p>
+</div></dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nonlinear.html"
+                        title="previous chapter">psc585.nonlinear</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ps2.html"
+                        title="next chapter">psc585.ps2</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/ps1.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ps2.html" title="psc585.ps2"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nonlinear.html" title="psc585.nonlinear"
+             >previous</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

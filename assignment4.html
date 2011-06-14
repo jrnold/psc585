@@ -1,0 +1,160 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Assignment4 &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="index.html" />
+    <link rel="next" title="psc585" href="api/psc585.html" />
+    <link rel="prev" title="Assignment 3" href="assignment3.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/psc585.html" title="psc585"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="assignment3.html" title="Assignment 3"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="assignment4">
+<h1>Assignment4<a class="headerlink" href="#assignment4" title="Permalink to this headline">¶</a></h1>
+<p>This is my write-up for <a class="reference download internal" href="_downloads/PSC585Ex44.pdf"><tt class="xref download docutils literal"><span class="pre">Assignment</span> <span class="pre">4</span></tt></a>.</p>
+<p>Most of the code to implement this assignment is in
+<a class="reference internal" href="api/ps4.html#psc585.ps4.FinalModel" title="psc585.ps4.FinalModel"><tt class="xref py py-class docutils literal"><span class="pre">psc585.ps4.FinalModel</span></tt></a>.  The attributes of this class includes
+the data from <tt class="docutils literal"><span class="pre">FinalModel.mat</span></tt> and <tt class="docutils literal"><span class="pre">FinalData.mat</span></tt> provided with
+the assignment.</p>
+<p>The method <a class="reference internal" href="api/ps4.html#psc585.ps4.FinalModel.new_p" title="psc585.ps4.FinalModel.new_p"><tt class="xref py py-meth docutils literal"><span class="pre">new_p()</span></tt></a> implements <tt class="docutils literal"><span class="pre">NewP</span></tt>;
+<a class="reference internal" href="api/ps4.html#psc585.ps4.FinalModel.phigprov" title="psc585.ps4.FinalModel.phigprov"><tt class="xref py py-meth docutils literal"><span class="pre">phigprov()</span></tt></a> implements <tt class="docutils literal"><span class="pre">Phihprov</span></tt>;
+<a class="reference internal" href="api/ps4.html#psc585.ps4.FinalModel.ptilde" title="psc585.ps4.FinalModel.ptilde"><tt class="xref py py-meth docutils literal"><span class="pre">ptilde()</span></tt></a> implements <tt class="docutils literal"><span class="pre">Ptilde</span></tt>.</p>
+<p>The Nested Pseudo Likelihood estimator described in part (d) is
+implemented in the method <a class="reference internal" href="api/ps4.html#psc585.ps4.FinalModel.npl" title="psc585.ps4.FinalModel.npl"><tt class="xref py py-func docutils literal"><span class="pre">npl()</span></tt></a>.</p>
+<p>The maximization of the partial pseudo-likelihood estimator in part
+(e) is implemented in the method <a class="reference internal" href="api/ps4.html#psc585.ps4.FinalModel.argmax_theta" title="psc585.ps4.FinalModel.argmax_theta"><tt class="xref py py-meth docutils literal"><span class="pre">argmax_theta()</span></tt></a>.</p>
+<p>First, I create a <a class="reference internal" href="api/ps4.html#psc585.ps4.FinalModel" title="psc585.ps4.FinalModel"><tt class="xref py py-class docutils literal"><span class="pre">FinalModel</span></tt></a> object to hold
+the data from the .mat files provided.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;../..&quot;</span><span class="p">)</span>
+
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">io</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">random</span>
+
+<span class="kn">import</span> <span class="nn">psc585</span>
+<span class="kn">from</span> <span class="nn">psc585</span> <span class="kn">import</span> <span class="n">ps4</span>
+
+<span class="n">foo</span> <span class="o">=</span> <span class="n">ps4</span><span class="o">.</span><span class="n">FinalModel</span><span class="o">.</span><span class="n">from_mat</span><span class="p">(</span><span class="s">&quot;FinalModel.mat&quot;</span><span class="p">,</span> <span class="s">&quot;FinalData.mat&quot;</span><span class="p">)</span>
+
+<span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">4403205</span><span class="p">)</span>
+
+<span class="c"># Initial Conditional Choice probabilities</span>
+<span class="c"># Government</span>
+<span class="n">Pg</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">foo</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">foo</span><span class="o">.</span><span class="n">k</span><span class="p">))</span>
+<span class="n">Pg</span> <span class="o">/=</span> <span class="n">Pg</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">newaxis</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Then, I estimate <img class="math" src="_images/math/636e4cd792aad491cad7fe4bb97ae52ebe548e18.png" alt="\\\\theta"/> with nested pseudo-likelhood.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Pp0</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">foo</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">foo</span><span class="o">.</span><span class="n">k</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The estimates for <img class="math" src="_images/math/636e4cd792aad491cad7fe4bb97ae52ebe548e18.png" alt="\\\\theta"/> are</p>
+<dl class="docutils">
+<dt>::</dt>
+<dd>[ 0.00780143  0.59974144  1.95694046  0.29005511  0.26612347]</dd>
+</dl>
+<p>After 100 iterations, the relative residual was 2.71e-12.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="assignment3.html"
+                        title="previous chapter">Assignment 3</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="api/psc585.html"
+                        title="next chapter">psc585</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/assignment4.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="api/psc585.html" title="psc585"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="assignment3.html" title="Assignment 3"
+             >previous</a> |</li>
+        <li><a href="index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

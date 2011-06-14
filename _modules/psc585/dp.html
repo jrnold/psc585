@@ -1,0 +1,439 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psc585.dp &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="../../index.html" />
+    <link rel="up" title="psc585" href="../psc585.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../psc585.html" accesskey="U">psc585</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for psc585.dp</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Dynamic Programming&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">la</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+
+<span class="n">EPS</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+
+<div class="viewcode-block" id="eyeminus"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.eyeminus">[docs]</a><span class="k">def</span> <span class="nf">eyeminus</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; 1 - x in place &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">x</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">diag_indices</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span>
+</div>
+<span class="k">def</span> <span class="nf">_expandg</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Expand transition function to a matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">coo_matrix</span><span class="p">((</span><span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">shape</span><span class="p">)),</span>
+                             <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">sp</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
+                              <span class="n">g</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">1</span><span class="p">))))</span>
+    <span class="k">return</span> <span class="n">P</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Ddpsolve"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.Ddpsolve">[docs]</a><span class="k">class</span> <span class="nc">Ddpsolve</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Discrete Time, Discrete Choice Dynamic Programming Problems</span>
+<span class="sd">    </span>
+<span class="sd">    Attributes</span>
+<span class="sd">    ------------</span>
+<span class="sd">    discount: float</span>
+<span class="sd">       Discount factor. Must be on (0, 1) for infinite horizon problems, </span>
+<span class="sd">       or (0, 1] for finite horizon problems.</span>
+<span class="sd">    reward: array, shape (n, m)</span>
+<span class="sd">       Reward values</span>
+<span class="sd">    P: array, shape (m * n, n)</span>
+<span class="sd">       Stochastic transition matrix. The axes correspond to action,</span>
+<span class="sd">       initial state, and next state.</span>
+<span class="sd">    T: int, optional</span>
+<span class="sd">       Number of time periods. Set to `None` for</span>
+<span class="sd">       infinite horizon problems.</span>
+<span class="sd">    vterm: optional</span>
+<span class="sd">       Terminal value function for finite horizon problems.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">discount</span><span class="p">,</span> <span class="n">reward</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vterm</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">discount</span> <span class="o">=</span> <span class="n">discount</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward</span> <span class="o">=</span> <span class="n">reward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="n">T</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">P</span> <span class="o">=</span> <span class="n">P</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">vterm</span> <span class="o">=</span> <span class="n">vterm</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="ow">and</span> <span class="n">vterm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vterm</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Ddpsolve.setReward"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.Ddpsolve.setReward">[docs]</a>    <span class="k">def</span> <span class="nf">setReward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reward</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set reward&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reward</span> <span class="o">=</span> <span class="n">reward</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">shape</span>
+</div>
+<div class="viewcode-block" id="Ddpsolve.valmax"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.Ddpsolve.valmax">[docs]</a>    <span class="k">def</span> <span class="nf">valmax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Solve single Bellman equation</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------------</span>
+<span class="sd">        v : array (n, )</span>
+<span class="sd">            Optimal values</span>
+<span class="sd">        x : array (n, )</span>
+<span class="sd">            Optimal controls.</span>
+<span class="sd">            </span>
+<span class="sd">        Notes</span>
+<span class="sd">        ------</span>
+
+<span class="sd">        Solve the Bellman equation for a given v</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            V(s) = max_{x \in X(x)}</span>
+<span class="sd">            \left\{</span>
+<span class="sd">                f(s, x) + \delta \sum_{s&#39; \in S} P(s&#39; | s, x) V(s&#39;)</span>
+<span class="sd">             \right\}            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discount</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+        <span class="c">## argmax by row</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">U</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c">## max by row</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">U</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">],</span> <span class="n">x</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ddpsolve.valpol"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.Ddpsolve.valpol">[docs]</a>    <span class="k">def</span> <span class="nf">valpol</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Evaluation policy</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        x : array</span>
+<span class="sd">            policy (an action for all states)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        --------</span>
+<span class="sd">        pstar : array, shape (n, n)</span>
+<span class="sd">            Transition probability matrix</span>
+<span class="sd">        fstar : array, shape (n, )</span>
+<span class="sd">            Optimal rewards</span>
+<span class="sd">        ind : array, shape (n,)</span>
+<span class="sd">            Index of values</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        ---------</span>
+
+<span class="sd">        `x` is (n, T+1) for finite horizon problems, and (n, 1) for infinite</span>
+<span class="sd">        horizon problems.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">## Select indices of policy from reward function</span>
+        <span class="c">## Not sure if this works with</span>
+        <span class="c">## ddpsolve.m calculates the index value</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">fstar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">[</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">]</span> <span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">pstar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">pstar</span><span class="p">,</span> <span class="n">fstar</span><span class="p">,</span> <span class="n">ind</span>
+</div>
+<div class="viewcode-block" id="Ddpsolve.backsolve"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.Ddpsolve.backsolve">[docs]</a>    <span class="k">def</span> <span class="nf">backsolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">T</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vterm</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Solve finite system by backward recursion</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        T : int, optional</span>
+<span class="sd">            Number of periods of time.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : array, shape (n, T)</span>
+<span class="sd">            Optimal controls. An optimal policy for each starting state</span>
+<span class="sd">        V : array, shape (n, T + 1)</span>
+<span class="sd">            Value function.             </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">T</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="n">T</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span> <span class="p">(</span><span class="s">&quot;Not a finite time model&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+        <span class="k">if</span> <span class="n">vterm</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">vterm</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">vterm</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vterm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vterm</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">T</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">T</span><span class="p">)),</span> <span class="n">vterm</span><span class="p">))</span>
+        <span class="n">pstar</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">T</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">T</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">v</span><span class="p">[</span> <span class="p">:,</span> <span class="n">t</span><span class="p">]</span> <span class="p">,</span> <span class="n">x</span><span class="p">[</span> <span class="p">:,</span> <span class="n">t</span><span class="p">]</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valmax</span><span class="p">(</span><span class="n">v</span><span class="p">[</span> <span class="p">:</span> <span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">pstar</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valpol</span><span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="n">t</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">pstar</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ddpsolve.funcit"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.Ddpsolve.funcit">[docs]</a>    <span class="k">def</span> <span class="nf">funcit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">EPS</span><span class="p">,</span> <span class="n">error_bounds</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Solve Bellman equations by function iteration</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        --------------</span>
+<span class="sd">        v : array, shape (n, ), optional</span>
+<span class="sd">           Initial guess</span>
+<span class="sd">        maxit : int, optional</span>
+<span class="sd">           Maximum number of iterations</span>
+<span class="sd">        tol : float, optional</span>
+<span class="sd">           Convergence tolerance</span>
+<span class="sd">        error_bounds : bool, optional</span>
+<span class="sd">           Use error bounds to determine convergence.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------------</span>
+<span class="sd">        info : int</span>
+<span class="sd">            Exit status. 0 if converged. -1 if not.</span>
+<span class="sd">        t : int</span>
+<span class="sd">            Number of iterations</span>
+<span class="sd">        relres : float</span>
+<span class="sd">            Residual variance</span>
+<span class="sd">        v : array, shape (n, )</span>
+<span class="sd">        x : array, shape </span>
+<span class="sd">        pstar : array, shape</span>
+<span class="sd">           </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">discount</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">discount</span><span class="p">)</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">relres</span> <span class="o">=</span> <span class="n">tol</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxit</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">vold</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">v</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valmax</span><span class="p">(</span><span class="n">vold</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">error_bounds</span><span class="p">:</span>
+                <span class="n">lbound</span> <span class="o">=</span> <span class="n">delta</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">vold</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">ubound</span> <span class="o">=</span> <span class="n">delta</span> <span class="o">*</span> <span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">vold</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="n">relres</span> <span class="o">=</span> <span class="p">(</span><span class="n">ubound</span> <span class="o">-</span> <span class="n">lbound</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">relres</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                    <span class="n">v</span> <span class="o">+=</span> <span class="p">(</span><span class="n">ubound</span> <span class="o">+</span> <span class="n">lbound</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+                    <span class="n">info</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">relres</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">vold</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">relres</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                    <span class="n">info</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="k">break</span>
+        <span class="n">pstar</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valpol</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">relres</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">pstar</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Ddpsolve.newton"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.Ddpsolve.newton">[docs]</a>    <span class="k">def</span> <span class="nf">newton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">EPS</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+               <span class="n">gauss_seidel</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Solve Bellman equations via Newton method (policy iteration)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        --------------</span>
+<span class="sd">        v : array, shape (n, ), optional</span>
+<span class="sd">           Initial guess for values.</span>
+<span class="sd">        x : array, shape (n, ), optional</span>
+<span class="sd">           Initial guess for policy.</span>
+<span class="sd">        maxit : int, optional</span>
+<span class="sd">           Maximum number of iterations</span>
+<span class="sd">        tol : float, optional</span>
+<span class="sd">           Convergence tolerance</span>
+<span class="sd">        gauss_seidel : bool, optional</span>
+<span class="sd">           Use Gauss-Seidel to solve the linear equation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ------------</span>
+<span class="sd">        info : int</span>
+<span class="sd">            Exit status. 0 if converged. -1 if not.</span>
+<span class="sd">        t : int</span>
+<span class="sd">            Number of iterations</span>
+<span class="sd">        relres : float</span>
+<span class="sd">            Residual variance</span>
+<span class="sd">        v : array, shape (n, )</span>
+<span class="sd">        x : array, shape </span>
+<span class="sd">        pstar : array, shape</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        Also called policy iteration.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="c">## Set initial values of x to such</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span> 
+        <span class="n">info</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxit</span><span class="p">):</span>
+            <span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">xold</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">v</span><span class="p">,</span> <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valmax</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">pstar</span><span class="p">,</span> <span class="n">fstar</span><span class="p">,</span> <span class="n">ind</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">valpol</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">Q</span> <span class="o">=</span> <span class="n">pstar</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">discount</span>
+            <span class="n">eyeminus</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">gauss_seidel</span><span class="p">:</span>
+                <span class="n">vold</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">fstar</span><span class="p">)</span>
+                <span class="n">relres</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">v</span> <span class="o">-</span> <span class="n">vold</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c">## Gauss Seidel</span>
+                <span class="n">L</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+                <span class="n">dv</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">fstar</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span>
+                <span class="n">relres</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dv</span><span class="p">)</span>
+                <span class="n">v</span> <span class="o">+=</span> <span class="n">dv</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%d</span><span class="s">, </span><span class="si">%f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">relres</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">xold</span><span class="p">):</span>
+                <span class="n">info</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">relres</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">pstar</span><span class="p">)</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Ddpsolve.from_transfunc"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.Ddpsolve.from_transfunc">[docs]</a>    <span class="k">def</span> <span class="nf">from_transfunc</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">transfunc</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize with deterministic transition function</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -------------</span>
+<span class="sd">        transfunc : array (n, m)</span>
+<span class="sd">             Deterministic transition function. Axes are</span>
+<span class="sd">             state, action.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;P&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">_expandg</span><span class="p">(</span><span class="n">transfunc</span><span class="p">)</span><span class="o">.</span><span class="n">todense</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>        
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Ddpsolve.from_transprob"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.Ddpsolve.from_transprob">[docs]</a>    <span class="k">def</span> <span class="nf">from_transprob</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">transprob</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize with transaction probabilities</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        transprob : array, shape (m, n, n)</span>
+<span class="sd">                  Stochastic transition matrix. The axes correspond to action,</span>
+<span class="sd">                  initial state, and next state.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">transprob</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">transprob</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;P&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">transprob</span><span class="p">,</span> <span class="p">(</span><span class="n">m</span> <span class="o">*</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    </div></div>
+<div class="viewcode-block" id="ddpsimul"><a class="viewcode-back" href="../../api/dp.html#psc585.dp.ddpsimul">[docs]</a><span class="k">def</span> <span class="nf">ddpsimul</span><span class="p">(</span><span class="n">pstar</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Monte-Carlo simulation of discrete-state/action controlled Markov process</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -------------</span>
+<span class="sd">    pstar : array, shape (n, n) or (n, n, T)</span>
+<span class="sd">      Optimal state transition matrix. Usually returned by one of the methods of</span>
+<span class="sd">      `Dpsolve`. The array has shape (n, n) for infinite horizon processes,</span>
+<span class="sd">      and (n, n, T) for finite horizon processes.</span>
+<span class="sd">    s : array, shape (k, )</span>
+<span class="sd">      Initial states</span>
+<span class="sd">    N : int</span>
+<span class="sd">      Number of simulations</span>
+<span class="sd">    x : array, shape (n, ) or (n, T)</span>
+<span class="sd">      Optimal controls</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ---------</span>
+<span class="sd">    spath : array, shape (k, N + 1)</span>
+<span class="sd">       Simulated states</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">infinite</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pstar</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">pstar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">spath</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="nb">int</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">infinite</span><span class="p">:</span>
+        <span class="c">## Row cumulative sum</span>
+        <span class="n">cp</span> <span class="o">=</span> <span class="n">pstar</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">spath</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="c">## Draws the column from a categorical distribution</span>
+            <span class="n">rdraw</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">rdraw</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cp</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">spath</span><span class="p">[:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">T</span> <span class="o">=</span> <span class="n">pstar</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">&gt;</span> <span class="n">T</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;Simulations greater than the time horizon are ignored.&quot;</span><span class="p">)</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">T</span><span class="p">)</span>
+        <span class="n">spath</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">cp</span> <span class="o">=</span> <span class="n">pstar</span><span class="p">[</span><span class="o">...</span><span class="p">,</span><span class="n">t</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">rdraw</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">rdraw</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cp</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">xpath</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">spath</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">spath</span><span class="p">,</span> <span class="n">xpath</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../psc585.html" >psc585</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

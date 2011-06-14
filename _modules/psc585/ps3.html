@@ -1,0 +1,560 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psc585.ps3 &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="../../index.html" />
+    <link rel="up" title="psc585" href="../psc585.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../psc585.html" accesskey="U">psc585</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for psc585.ps3</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot; Problem Set 3 specific code&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">la</span>
+
+<div class="viewcode-block" id="BargModel"><a class="viewcode-back" href="../../api/ps3.html#psc585.ps3.BargModel">[docs]</a><span class="k">class</span> <span class="nc">BargModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Bargaining model</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    </span>
+<span class="sd">    c : int</span>
+<span class="sd">       Coalition specific payoff (constant)</span>
+<span class="sd">    p : ndarray, shape (n, )</span>
+<span class="sd">       Proposal probabilities</span>
+<span class="sd">    ideals : ndarray, shape (n, 2)</span>
+<span class="sd">       Ideal points</span>
+<span class="sd">    d : float</span>
+<span class="sd">       Discount parameter</span>
+<span class="sd">    Cs1 :</span>
+<span class="sd">       Final coalition specific payoffs</span>
+<span class="sd">    Cs0 :</span>
+<span class="sd">       Initial coalition specific payoffs</span>
+<span class="sd">    prop : ndarray, shape (30, )</span>
+<span class="sd">    part1 : ndarray, shape (30, )</span>
+<span class="sd">    part2 : ndarray, snape (30, )</span>
+<span class="sd">    parts : ndarray, shape (60, )</span>
+<span class="sd">       Uknown</span>
+<span class="sd">    pols : ndarray, shape (60, 1)</span>
+<span class="sd">       Policies</span>
+<span class="sd">    COAL : ndarray, shape (60, 5)</span>
+<span class="sd">       Coalitions</span>
+<span class="sd">    K : float</span>
+<span class="sd">       Constant term in the utility function of players</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    ---------</span>
+
+<span class="sd">    *COAL* is a array with shape (60, 5). Each row is</span>
+<span class="sd">    a participant in a coalition. Rows 0 and 1 are</span>
+<span class="sd">    the two participants in coalition $C_{1} \in D_1$,</span>
+<span class="sd">    rows 2 and 3 correspond to the participants in coalition</span>
+<span class="sd">    $C_2 \in D_1$, and so on.</span>
+
+<span class="sd">    *parts* is an (60, ) array with the number of each voter of the</span>
+<span class="sd">    corresponding row in *COAL*, i.e. the column number + 1 which is</span>
+<span class="sd">    nonzero.  *parts1* contains the odd rows, i.e.  the first</span>
+<span class="sd">    participant in each of the 30 coalitions. *parts2* list the</span>
+<span class="sd">    participants in the even rows of *COAL*, i.e.  the second</span>
+<span class="sd">    participant in each of the 30 coalitions.</span>
+<span class="sd">    </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ideals</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">Cs1</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        Ideals : ndarray, shape (n, 2)</span>
+<span class="sd">        d : float</span>
+<span class="sd">            Discounting parameter</span>
+<span class="sd">        p : ndarray, shape (n, )</span>
+<span class="sd">            Proposal distribution for each legislator</span>
+<span class="sd">        Cs1 :</span>
+<span class="sd">            Something</span>
+<span class="sd">        c : int</span>
+<span class="sd">            Coalition specific payoff</span>
+<span class="sd">        K : float</span>
+<span class="sd">            Constant term in the utility function of players</span>
+
+
+<span class="sd">        Notes</span>
+<span class="sd">        -------------</span>
+
+<span class="sd">        Function translated from the BargModel.m file provided by</span>
+<span class="sd">        Tasos.</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ideals</span> <span class="o">=</span> <span class="n">ideals</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="n">d</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Cs1</span> <span class="o">=</span> <span class="n">Cs1</span>
+
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">60</span><span class="p">,</span> <span class="p">),</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="n">pols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">60</span><span class="p">,</span> <span class="p">),</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="c">## Coalitions</span>
+        <span class="n">COAL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">60</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="nb">int</span><span class="p">)</span>
+        
+        <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c">## For all voters</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c">## For voters 1 to 4</span>
+            <span class="k">for</span> <span class="n">j1</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+                <span class="c">## that are not the initial voter</span>
+                <span class="k">if</span> <span class="n">j1</span> <span class="o">!=</span> <span class="n">i</span><span class="p">:</span>
+                    <span class="c">## for voters greater than the 1st other</span>
+                    <span class="k">for</span> <span class="n">j2</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">j1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">j2</span> <span class="o">!=</span> <span class="n">i</span><span class="p">:</span>
+                            <span class="n">m</span> <span class="o">=</span> <span class="n">m</span> <span class="o">+</span> <span class="mi">1</span>
+                            <span class="n">j</span> <span class="o">=</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span>
+                            <span class="n">parts</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">j1</span>
+                            <span class="n">COAL</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">j1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                            <span class="n">pols</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">m</span>
+                            
+                            <span class="n">j</span> <span class="o">=</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span>
+                            <span class="n">parts</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">]</span> <span class="o">=</span> <span class="n">j2</span>
+                            <span class="n">COAL</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">j2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                            <span class="n">pols</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">m</span>
+
+        <span class="n">parts</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prop</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="mi">6</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">part1</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">60</span><span class="p">:</span><span class="mi">2</span><span class="p">]]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">part2</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">60</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parts</span> <span class="o">=</span> <span class="n">parts</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pols</span> <span class="o">=</span> <span class="n">pols</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">COAL</span> <span class="o">=</span> <span class="n">COAL</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">=</span> <span class="n">K</span>
+                <span class="c">## Initial Values </span>
+        <span class="c">## Set all entries to c / (1 - p_j) by default</span>
+        <span class="n">Cs0</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">30</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
+        <span class="c">## Fill in entries when </span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                    <span class="n">Cs0</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Cs0</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Cs0</span> <span class="o">=</span> <span class="n">Cs0</span>
+
+
+<div class="viewcode-block" id="BargModel.func"><a class="viewcode-back" href="../../api/ps3.html#psc585.ps3.BargModel.func">[docs]</a>    <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Function values</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        --------------</span>
+<span class="sd">        y : ndarray, shape (155, )</span>
+<span class="sd">            Parameter vector</span>
+<span class="sd">        t : float, optional</span>
+<span class="sd">            Value of t between 0 and 1</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        F : ndarray, shape (155, )</span>
+<span class="sd">            Function values at y</span>
+<span class="sd">        JF : ndarray, shape (155, 155)</span>
+<span class="sd">            Jacobian of the function evaluated at y</span>
+<span class="sd">        JFt : ndarray</span>
+<span class="sd">            Derivative of the function as an implicit function of t</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">## Coalition specific payoffs</span>
+        <span class="n">Cs</span> <span class="o">=</span> <span class="n">t</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cs1</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cs0</span>
+
+        <span class="c"># number of parameters</span>
+        <span class="n">npars</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;v&#39;</span> <span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s">&#39;lam&#39;</span> <span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s">&#39;x&#39;</span> <span class="p">:</span> <span class="mi">60</span><span class="p">,</span> <span class="s">&#39;mu&#39;</span> <span class="p">:</span> <span class="mi">60</span> <span class="p">}</span>
+        <span class="c"># Indices for each parameter</span>
+        <span class="n">idxs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">npars</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">])</span>
+        <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;lam&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">npars</span><span class="p">[</span><span class="s">&#39;lam&#39;</span><span class="p">])</span>
+        <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;lam&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                              <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;lam&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">npars</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">])</span>
+        <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                              <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">npars</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">])</span>
+
+        <span class="c">## Split parameters </span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">]]</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;lam&#39;</span><span class="p">]]</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]]</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">y</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]]</span>
+
+        <span class="c">## Function values</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">155</span><span class="p">,</span> <span class="p">)</span>
+        <span class="c">## Lambda</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lam</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="c">## Mu values as a matrix</span>
+        <span class="c">## TODO: check that rows and values are correct</span>
+        <span class="c">## Matlab reshapes by Fortran (column order)</span>
+        <span class="n">mmu</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mu</span><span class="p">),</span> <span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+        <span class="c">## Lambda as a matrix</span>
+        <span class="n">mlam</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">lam</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="c">## proposals to a 30 x 2 matrix</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s">&#39;C&#39;</span><span class="p">)</span>
+
+        <span class="c">## utilities for proposal </span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">30</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">u1</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ideals</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">u2</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ideals</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">U</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:</span> <span class="p">]</span> <span class="o">=</span> <span class="n">u1</span> <span class="o">+</span> <span class="n">u2</span> <span class="o">+</span> <span class="n">Cs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span>
+
+        <span class="c">## \bar{u}.</span>
+        <span class="c">## Utility to each player for status quo of (0,0)</span>
+        <span class="n">Usq</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ideals</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+               <span class="o">-</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ideals</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+               <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span><span class="p">)</span>
+        <span class="c">## Derivatives of utilities</span>
+        <span class="n">DU1</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">30</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">DU1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">DU1</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ideals</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">DU2</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">30</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">DU2</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">DU2</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">]</span> <span class="o">=</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">ideals</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="c">## Equation 7</span>
+        <span class="n">F</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="p">(</span><span class="n">U</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">sig</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">6</span><span class="p">))))</span>
+
+        <span class="c">## Equation 8</span>
+        <span class="c">## For all players</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="c">## Indices of player i</span>
+            <span class="n">ii</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">sig</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">U</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="n">U</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">mlam</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+            <span class="n">F</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;lam&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
+
+        <span class="c">## Equation 9</span>
+        <span class="n">Fx1</span> <span class="o">=</span> <span class="p">(</span><span class="n">DU1</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop</span><span class="p">]</span>
+              <span class="o">+</span> <span class="n">DU1</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">mmu</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+              <span class="o">+</span> <span class="n">DU1</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">mmu</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">Fx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">DU2</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">prop</span><span class="p">]</span>
+              <span class="o">+</span> <span class="n">DU2</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">mmu</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+              <span class="o">+</span> <span class="n">DU2</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">mmu</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">F</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">Fx1</span><span class="p">,</span> <span class="n">Fx2</span><span class="p">)),</span> <span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="c"># Equation 10</span>
+        <span class="n">F</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">U</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">Usq</span>
+                         <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">*</span> <span class="n">v</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">]</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">mu</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c"># Jacobian</span>
+        <span class="n">JF</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">155</span><span class="p">,</span> <span class="mi">155</span><span class="p">))</span>
+        <span class="c"># Equation 7</span>
+        <span class="c"># with respect to v</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[:</span><span class="mi">5</span><span class="p">],</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[:</span><span class="mi">5</span><span class="p">]]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+        <span class="c"># with respect to lambda</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">],</span> <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;lam&#39;</span><span class="p">])]</span> <span class="o">=</span> \
+        <span class="p">(</span><span class="o">-</span><span class="n">U</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lam</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">6</span><span class="p">))[:</span> <span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="c"># with respect to x</span>
+        <span class="n">JF</span><span class="p">[:</span><span class="mi">5</span><span class="p">,</span> <span class="mi">35</span><span class="p">:</span><span class="mi">95</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">DU1</span> <span class="o">*</span> <span class="p">(</span><span class="n">sig</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">6</span><span class="p">))[:,</span> <span class="n">sp</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">JF</span><span class="p">[:</span><span class="mi">5</span><span class="p">,</span> <span class="mi">36</span><span class="p">:</span><span class="mi">96</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">DU2</span> <span class="o">*</span> <span class="p">(</span><span class="n">sig</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">6</span><span class="p">))[:,</span> <span class="n">sp</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c"># Equation 8</span>
+        <span class="c"># with respect to lambda</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="n">ii</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+            <span class="n">foo</span> <span class="o">=</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">lam</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span> <span class="o">*</span> <span class="n">U</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">i</span><span class="p">],</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> 
+                   <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">lam</span><span class="p">[</span><span class="n">ii</span><span class="p">])))</span>
+            <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">npars</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">ii</span><span class="p">,</span> <span class="n">npars</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">ii</span><span class="p">)]</span> <span class="o">=</span> <span class="n">foo</span>
+        <span class="c"># with respect to x</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+                <span class="n">minlam</span> <span class="o">=</span> <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;lam&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">minx</span> <span class="o">=</span> <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="c"># range of lambda pars for player i</span>
+                <span class="n">ii</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span>
+                <span class="c"># Indices</span>
+                <span class="n">JFi0</span> <span class="o">=</span> <span class="n">minlam</span> <span class="o">+</span> <span class="p">(</span><span class="n">i</span> <span class="o">*</span> <span class="mi">6</span><span class="p">)</span> <span class="o">+</span> <span class="n">m</span>
+                <span class="n">JFi10</span> <span class="o">=</span> <span class="n">minx</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">12</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">12</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">JFi11</span> <span class="o">=</span> <span class="n">minx</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">12</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">12</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="c">#</span>
+                <span class="n">JF</span><span class="p">[</span><span class="n">JFi0</span><span class="p">,</span> <span class="n">JFi10</span><span class="p">]</span> <span class="o">=</span> <span class="n">DU1</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sig</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+                <span class="n">JF</span><span class="p">[</span><span class="n">JFi0</span><span class="p">,</span> <span class="n">JFi11</span><span class="p">]</span> <span class="o">=</span> <span class="n">DU2</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">sig</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+                <span class="n">JF</span><span class="p">[</span><span class="n">JFi0</span><span class="p">,</span> <span class="n">minx</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">12</span> <span class="o">+</span> <span class="n">m</span> <span class="o">*</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-=</span> <span class="n">DU1</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+                <span class="n">JF</span><span class="p">[</span><span class="n">JFi0</span><span class="p">,</span> <span class="n">minx</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">12</span> <span class="o">+</span> <span class="n">m</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-=</span> <span class="n">DU2</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+
+        <span class="c"># Equation 9</span>
+        <span class="c"># with respect to x</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">],</span> <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;x&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">60</span><span class="p">)</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">kron</span><span class="p">((</span><span class="n">mmu</span> <span class="o">**</span> <span class="mi">2</span><span class="p">),</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="c"># with respect to mu</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="mi">95</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">95</span><span class="p">:</span><span class="mi">155</span><span class="p">:</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">DU1</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">]</span> <span class="o">*</span> <span class="n">mmu</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="mi">95</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">95</span><span class="p">:</span><span class="mi">155</span><span class="p">:</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">DU2</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">]</span> <span class="o">*</span> <span class="n">mmu</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="mi">95</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">95</span><span class="p">:</span><span class="mi">155</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">DU1</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">]</span> <span class="o">*</span> <span class="n">mmu</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="mi">95</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">95</span><span class="p">:</span><span class="mi">155</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">DU2</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">]</span> <span class="o">*</span> <span class="n">mmu</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="c"># Equation 10</span>
+        <span class="c"># with respect to v</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">],</span> <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">])]</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">COAL</span>
+        <span class="c"># with respect to x</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">95</span><span class="p">:</span><span class="mi">155</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="mi">95</span><span class="p">:</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">DU1</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">]</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">95</span><span class="p">:</span><span class="mi">155</span><span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="mi">95</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">DU2</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">]</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">95</span><span class="p">:</span><span class="mi">155</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="mi">95</span><span class="p">:</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="n">DU1</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">]</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">95</span><span class="p">:</span><span class="mi">155</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">35</span><span class="p">:</span><span class="mi">95</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">DU2</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">]</span>
+        <span class="c"># with respect to mu</span>
+        <span class="n">JF</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">],</span> <span class="n">idxs</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="n">mu</span><span class="p">)</span>
+
+        <span class="c"># Derivatives of H(y, y(t))</span>
+        <span class="n">JFt</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">155</span><span class="p">,</span> <span class="p">)</span>
+        <span class="n">JFt</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;v&#39;</span><span class="p">]]</span> <span class="o">=</span>  <span class="o">-</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Cs1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cs0</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">sig</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="n">ii</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+            <span class="n">cv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cs1</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cs0</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
+            <span class="n">JFt</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;lam&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">+</span> <span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">sig</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">cv</span><span class="p">)</span> <span class="o">-</span> <span class="n">cv</span>
+        <span class="n">jft1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Cs1</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">]</span>
+                          <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cs0</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">part1</span><span class="p">])</span>
+        <span class="n">jft2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Cs1</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">]</span>
+                          <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">Cs0</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">part2</span><span class="p">])</span>
+        <span class="n">JFt</span><span class="p">[</span><span class="n">idxs</span><span class="p">[</span><span class="s">&#39;mu&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">column_stack</span><span class="p">((</span><span class="n">jft1</span><span class="p">,</span> <span class="n">jft2</span><span class="p">)),</span> <span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">F</span><span class="p">,</span> <span class="n">JF</span><span class="p">,</span> <span class="n">JFt</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BargModel.newton"><a class="viewcode-back" href="../../api/ps3.html#psc585.ps3.BargModel.newton">[docs]</a>    <span class="k">def</span> <span class="nf">newton</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Newton iteration</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ------------</span>
+<span class="sd">        y : ndarray, shape (155, )</span>
+<span class="sd">           Initial parameter guess. Changed in place.</span>
+<span class="sd">        tol : float</span>
+<span class="sd">           Tolerance for convergence</span>
+<span class="sd">        maxit : int</span>
+<span class="sd">           Maximum number of iterations</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Whether to print messages during iterations</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        info: integer</span>
+<span class="sd">           Did function converge? True if it did.</span>
+<span class="sd">        relres : float</span>
+<span class="sd">           Relative residual of last iteration</span>
+<span class="sd">        i : int</span>
+<span class="sd">           Number of iterations</span>
+
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxit</span><span class="p">):</span>
+            <span class="n">f</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">dft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+            <span class="n">dy</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">-=</span> <span class="n">dy</span>
+            <span class="n">relres</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dy</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%d</span><span class="s">: </span><span class="si">%f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">relres</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">relres</span>  <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="n">info</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">relres</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="BargModel.predcorr"><a class="viewcode-back" href="../../api/ps3.html#psc585.ps3.BargModel.predcorr">[docs]</a>    <span class="k">def</span> <span class="nf">predcorr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">glb</span><span class="p">,</span> <span class="n">gub</span><span class="p">,</span> <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Predictor-corrector method</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        -----------</span>
+<span class="sd">        y : ndarray, shape (155, )</span>
+<span class="sd">            Initial parameters. Updated in place.</span>
+<span class="sd">        glb : float</span>
+<span class="sd">            Gamma-step lower bound, between 0 and 1.</span>
+<span class="sd">        gub : float</span>
+<span class="sd">            Gamma-step upper bound, between 0 and 1.</span>
+<span class="sd">        t : float, optional</span>
+<span class="sd">            t between 0 and 1.</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            Whether to print messages during iterations</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        ----------</span>
+<span class="sd">        t : float</span>
+<span class="sd">            Final t value. If less than 1, then it did not converge.</span>
+<span class="sd">        i : int</span>
+<span class="sd">            Number of iterations</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">gub</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">t_old</span> <span class="o">=</span> <span class="n">t</span>
+            <span class="n">y_old</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="c"># Update t</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="n">gamma</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%d</span><span class="s">: </span><span class="si">%f</span><span class="s"> </span><span class="si">%f</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">gamma</span><span class="p">))</span>
+            <span class="c"># Update y(t) in direction of t</span>
+            <span class="n">y</span> <span class="o">+=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">success</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c"># y is updated in place</span>
+                <span class="n">nwtn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">newton</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                <span class="n">success</span> <span class="o">=</span> <span class="n">nwtn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="s">&quot;Newton did not converge&quot;</span>
+            <span class="k">except</span> <span class="n">la</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="k">print</span> <span class="s">&quot;LinAlgError&quot;</span>
+                <span class="k">pass</span>
+            <span class="c"># If newton works</span>
+            <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+                <span class="k">print</span> <span class="p">(</span><span class="s">&quot;success&quot;</span><span class="p">)</span>
+                <span class="n">gamma</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">gub</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">gamma</span><span class="p">)</span>
+            <span class="c"># If newton fails</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">print</span> <span class="p">(</span><span class="s">&quot;fail&quot;</span><span class="p">)</span>
+                <span class="c"># reset y</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y_old</span>
+                <span class="c"># reset t</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">t_old</span>
+                <span class="c"># halve gamma</span>
+                <span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">/</span> <span class="mf">2.</span>
+                <span class="c"># if gamma too small, end iterations</span>
+                <span class="k">if</span> <span class="n">gamma</span> <span class="o">&lt;</span> <span class="n">glb</span><span class="p">:</span>
+                    <span class="k">print</span> <span class="s">&quot;Warning: Did not converge&quot;</span>
+                    <span class="k">print</span> <span class="s">&quot;Gamma less than lower bound&quot;</span>
+                    <span class="k">break</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+            </div></div>
+<div class="viewcode-block" id="make_model"><a class="viewcode-back" href="../../api/ps3.html#psc585.ps3.make_model">[docs]</a><span class="k">def</span> <span class="nf">make_model</span><span class="p">(</span><span class="n">Cs1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Make model in assignment 3&quot;&quot;&quot;</span>
+    <span class="n">ideals</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="mi">4</span><span class="p">],</span>
+                       <span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="mf">3.</span><span class="o">/</span><span class="mi">4</span><span class="p">],</span>
+                       <span class="p">[</span><span class="mf">7.</span><span class="o">/</span><span class="mi">16</span><span class="p">,</span> <span class="mf">7.</span><span class="o">/</span><span class="mi">16</span><span class="p">],</span>
+                       <span class="p">[</span><span class="mf">7.</span><span class="o">/</span><span class="mi">16</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.</span><span class="o">/</span><span class="mi">16</span><span class="p">],</span>
+                       <span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="mi">2</span><span class="p">]])</span>
+    
+    <span class="c"># Discount</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="mf">2.</span><span class="o">/</span><span class="mi">3</span>
+    <span class="c"># Proposal probability</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="o">/</span><span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="c"># Coalition specific utility (constant)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mf">45.</span>
+    <span class="c"># Utility constant</span>
+    <span class="n">K</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">BargModel</span><span class="o">.</span><span class="n">BargModel</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">Cs</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span>
+
+</div>
+<div class="viewcode-block" id="make_y0"><a class="viewcode-back" href="../../api/ps3.html#psc585.ps3.make_y0">[docs]</a><span class="k">def</span> <span class="nf">make_y0</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Make y0 &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">mu_ij</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">):</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">uij</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">c</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">p</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+                        <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">ubar</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">d</span> <span class="o">*</span> <span class="n">v0</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+    <span class="c"># \bar{u} : status quo payoffs</span>
+    <span class="n">ubar</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">ideals</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">K</span>
+    <span class="c"># TODO: where did plus 10 come from?</span>
+    <span class="n">uij</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">ideals</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">ideals</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">][:,</span> <span class="n">sp</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+           <span class="o">-</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">ideals</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">ideals</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">][:,</span> <span class="n">sp</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">K</span><span class="p">)</span>
+    <span class="c"># v_0</span>
+    <span class="n">v0</span> <span class="o">=</span> <span class="p">(</span><span class="n">uij</span> <span class="o">*</span> <span class="n">model</span><span class="o">.</span><span class="n">p</span><span class="p">[:,</span> <span class="n">sp</span><span class="o">.</span><span class="n">newaxis</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">c</span>
+        <span class="c">## \lambda_0</span>
+    <span class="n">lam0</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span> <span class="o">*</span> <span class="o">-</span><span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">c</span><span class="p">)</span>
+    <span class="c"># if m_i = i</span>
+    <span class="n">lam0</span><span class="p">[</span><span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">],</span> <span class="n">sp</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">lam0</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="n">lam0</span><span class="p">,</span> <span class="p">(</span><span class="n">lam0</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="p">))</span>
+    <span class="c"># x_0</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">ideals</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="p">))</span>
+    <span class="c"># \mu_0</span>
+    <span class="n">mu0</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="c"># For players</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="c"># For coalitions</span>
+        <span class="k">for</span> <span class="n">mi</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">6</span><span class="p">):</span>
+            <span class="c"># for each other player in the coalition</span>
+            <span class="n">ii</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">+</span> <span class="n">mi</span>
+            <span class="n">mu0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu_ij</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">part1</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+            <span class="n">mu0</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">mi</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu_ij</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">part2</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+    <span class="n">mu0</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">ravel</span><span class="p">(</span><span class="n">mu0</span><span class="p">)</span>
+    <span class="c"># y_0</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">v0</span><span class="p">,</span> <span class="n">lam0</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">mu0</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">y0</span>
+
+
+    </div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../psc585.html" >psc585</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

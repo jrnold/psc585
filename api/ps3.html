@@ -1,0 +1,333 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psc585.ps3 &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="../index.html" />
+    <link rel="next" title="psc585.ps4" href="ps4.html" />
+    <link rel="prev" title="psc585.ps2" href="ps2.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ps4.html" title="psc585.ps4"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ps2.html" title="psc585.ps2"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-psc585.ps3">
+<span id="psc585-ps3"></span><h1>psc585.ps3<a class="headerlink" href="#module-psc585.ps3" title="Permalink to this headline">¶</a></h1>
+<p>Problem Set 3 specific code</p>
+<dl class="class">
+<dt id="psc585.ps3.BargModel">
+<em class="property">class </em><tt class="descclassname">psc585.ps3.</tt><tt class="descname">BargModel</tt><big>(</big><em>ideals</em>, <em>d</em>, <em>p</em>, <em>Cs1</em>, <em>c</em>, <em>K</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps3.html#BargModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps3.BargModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bargaining model</p>
+<p class="rubric">Notes</p>
+<p><em>COAL</em> is a array with shape (60, 5). Each row is
+a participant in a coalition. Rows 0 and 1 are
+the two participants in coalition $C_{1} in D_1$,
+rows 2 and 3 correspond to the participants in coalition
+$C_2 in D_1$, and so on.</p>
+<p><em>parts</em> is an (60, ) array with the number of each voter of the
+corresponding row in <em>COAL</em>, i.e. the column number + 1 which is
+nonzero.  <em>parts1</em> contains the odd rows, i.e.  the first
+participant in each of the 30 coalitions. <em>parts2</em> list the
+participants in the even rows of <em>COAL</em>, i.e.  the second
+participant in each of the 30 coalitions.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="8%" />
+<col width="29%" />
+<col width="63%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>c</td>
+<td>int</td>
+<td>Coalition specific payoff (constant)</td>
+</tr>
+<tr><td>p</td>
+<td>ndarray, shape (n, )</td>
+<td>Proposal probabilities</td>
+</tr>
+<tr><td>ideals</td>
+<td>ndarray, shape (n, 2)</td>
+<td>Ideal points</td>
+</tr>
+<tr><td>d</td>
+<td>float</td>
+<td>Discount parameter</td>
+</tr>
+<tr><td>Cs1 :</td>
+<td>&nbsp;</td>
+<td>Final coalition specific payoffs</td>
+</tr>
+<tr><td>Cs0 :</td>
+<td>&nbsp;</td>
+<td>Initial coalition specific payoffs</td>
+</tr>
+<tr><td>prop</td>
+<td>ndarray, shape (30, )</td>
+<td>&nbsp;</td>
+</tr>
+<tr><td>part1</td>
+<td>ndarray, shape (30, )</td>
+<td>&nbsp;</td>
+</tr>
+<tr><td>part2</td>
+<td>ndarray, snape (30, )</td>
+<td>&nbsp;</td>
+</tr>
+<tr><td>parts</td>
+<td>ndarray, shape (60, )</td>
+<td>Uknown</td>
+</tr>
+<tr><td>pols</td>
+<td>ndarray, shape (60, 1)</td>
+<td>Policies</td>
+</tr>
+<tr><td>COAL</td>
+<td>ndarray, shape (60, 5)</td>
+<td>Coalitions</td>
+</tr>
+<tr><td>K</td>
+<td>float</td>
+<td>Constant term in the utility function of players</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="psc585.ps3.BargModel.func">
+<tt class="descname">func</tt><big>(</big><em>y</em>, <em>t=1</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps3.html#BargModel.func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps3.BargModel.func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function values</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>y</strong> : ndarray, shape (155, )</p>
+<blockquote>
+<div><p>Parameter vector</p>
+</div></blockquote>
+<p><strong>t</strong> : float, optional</p>
+<blockquote>
+<div><p>Value of t between 0 and 1</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>F</strong> : ndarray, shape (155, )</p>
+<blockquote>
+<div><p>Function values at y</p>
+</div></blockquote>
+<p><strong>JF</strong> : ndarray, shape (155, 155)</p>
+<blockquote>
+<div><p>Jacobian of the function evaluated at y</p>
+</div></blockquote>
+<p><strong>JFt</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>Derivative of the function as an implicit function of t</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.ps3.BargModel.newton">
+<tt class="descname">newton</tt><big>(</big><em>y</em>, <em>t=1</em>, <em>tol=None</em>, <em>maxit=100</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps3.html#BargModel.newton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps3.BargModel.newton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Newton iteration</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>y</strong> : ndarray, shape (155, )</p>
+<blockquote>
+<div><p>Initial parameter guess. Changed in place.</p>
+</div></blockquote>
+<p><strong>tol</strong> : float</p>
+<blockquote>
+<div><p>Tolerance for convergence</p>
+</div></blockquote>
+<p><strong>maxit</strong> : int</p>
+<blockquote>
+<div><p>Maximum number of iterations</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool</p>
+<blockquote>
+<div><p>Whether to print messages during iterations</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>info: integer</strong> :</p>
+<blockquote>
+<div><p>Did function converge? True if it did.</p>
+</div></blockquote>
+<p><strong>relres</strong> : float</p>
+<blockquote>
+<div><p>Relative residual of last iteration</p>
+</div></blockquote>
+<p><strong>i</strong> : int</p>
+<blockquote class="last">
+<div><p>Number of iterations</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.ps3.BargModel.predcorr">
+<tt class="descname">predcorr</tt><big>(</big><em>y</em>, <em>glb</em>, <em>gub</em>, <em>t=0</em>, <em>verbose=False</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps3.html#BargModel.predcorr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps3.BargModel.predcorr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Predictor-corrector method</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>y</strong> : ndarray, shape (155, )</p>
+<blockquote>
+<div><p>Initial parameters. Updated in place.</p>
+</div></blockquote>
+<p><strong>glb</strong> : float</p>
+<blockquote>
+<div><p>Gamma-step lower bound, between 0 and 1.</p>
+</div></blockquote>
+<p><strong>gub</strong> : float</p>
+<blockquote>
+<div><p>Gamma-step upper bound, between 0 and 1.</p>
+</div></blockquote>
+<p><strong>t</strong> : float, optional</p>
+<blockquote>
+<div><p>t between 0 and 1.</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool</p>
+<blockquote>
+<div><p>Whether to print messages during iterations</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>t</strong> : float</p>
+<blockquote>
+<div><p>Final t value. If less than 1, then it did not converge.</p>
+</div></blockquote>
+<p><strong>i</strong> : int</p>
+<blockquote class="last">
+<div><p>Number of iterations</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.ps3.make_model">
+<tt class="descclassname">psc585.ps3.</tt><tt class="descname">make_model</tt><big>(</big><em>Cs1</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps3.html#make_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps3.make_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make model in assignment 3</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.ps3.make_y0">
+<tt class="descclassname">psc585.ps3.</tt><tt class="descname">make_y0</tt><big>(</big><em>model</em><big>)</big><a class="reference internal" href="../_modules/psc585/ps3.html#make_y0"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.ps3.make_y0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make y0</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ps2.html"
+                        title="previous chapter">psc585.ps2</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ps4.html"
+                        title="next chapter">psc585.ps4</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/ps3.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ps4.html" title="psc585.ps4"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ps2.html" title="psc585.ps2"
+             >previous</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
