@@ -1,0 +1,384 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psc585.nonlinear &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="../../index.html" />
+    <link rel="up" title="psc585" href="../psc585.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../psc585.html" accesskey="U">psc585</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for psc585.nonlinear</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;Functions to solve nonlinear equations and complementarity problems&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">la</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span>
+
+<div class="viewcode-block" id="fixpoint"><a class="viewcode-back" href="../../api/nonlinear.html#psc585.nonlinear.fixpoint">[docs]</a><span class="k">def</span> <span class="nf">fixpoint</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">maxit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Fixed point function iteration</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -------------</span>
+<span class="sd">    f : function</span>
+<span class="sd">      Function for which to find the fixed point.</span>
+<span class="sd">    x : array </span>
+<span class="sd">      Initial guess.</span>
+<span class="sd">    tol : float, optional</span>
+<span class="sd">      Tolerance for convergence.</span>
+<span class="sd">    maxit : int, optional</span>
+<span class="sd">      Maximum number of iterations.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----------</span>
+<span class="sd">    info : integer</span>
+<span class="sd">       Did function converge? -1 if it did not, and 0 if it did.</span>
+<span class="sd">    relres : float</span>
+<span class="sd">       Relative residual at last iteration.</span>
+<span class="sd">    t : int</span>
+<span class="sd">       Number of iterations</span>
+<span class="sd">    gval : array</span>
+<span class="sd">       Fixed point, where f(x) = x.</span>
+<span class="sd">       </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">tol</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxit</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">gval</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">relres</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">gval</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">relres</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="n">info</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">break</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">gval</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">relres</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">gval</span><span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="bisect"><a class="viewcode-back" href="../../api/nonlinear.html#psc585.nonlinear.bisect">[docs]</a><span class="k">def</span> <span class="nf">bisect</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Find roots by bisection</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -------------</span>
+<span class="sd">    f : function</span>
+<span class="sd">    a : array</span>
+<span class="sd">      Lower bounds</span>
+<span class="sd">    b : array</span>
+<span class="sd">      Upper bounds</span>
+<span class="sd">    tol : float</span>
+<span class="sd">      Tolerance criteria</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------------</span>
+<span class="sd">    x : array</span>
+<span class="sd">      Roots of f</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">a</span> <span class="o">&gt;</span> <span class="n">b</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Lower bound greater than upper bound&quot;</span><span class="p">)</span>
+        <span class="k">return</span> 
+    <span class="n">sa</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    <span class="n">sb</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">sp</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">sa</span> <span class="o">==</span> <span class="n">sb</span><span class="p">):</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;Root not bracketed&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="c">## Initializations</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">b</span> <span class="o">-</span> <span class="n">a</span><span class="p">)</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">*</span> <span class="n">tol</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">a</span> <span class="o">+</span> <span class="n">dx</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">sb</span> <span class="o">*</span> <span class="n">dx</span>
+
+    <span class="k">while</span> <span class="n">sp</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">absolute</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">):</span>
+        <span class="k">print</span> <span class="n">dx</span>
+        <span class="n">dx</span> <span class="o">*=</span> <span class="mf">0.5</span>
+        <span class="n">x</span> <span class="o">-=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span> <span class="o">*</span> <span class="n">dx</span>
+
+    <span class="k">return</span> <span class="n">x</span>
+</div>
+<div class="viewcode-block" id="smooth"><a class="viewcode-back" href="../../api/nonlinear.html#psc585.nonlinear.smooth">[docs]</a><span class="k">def</span> <span class="nf">smooth</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Fischer&#39;s function</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    f : function</span>
+<span class="sd">        should return (fx, J) where fx are the function</span>
+<span class="sd">        values evaluated at x, and J is the Jacobian.</span>
+<span class="sd">    x : ndarray, shape (n, )</span>
+<span class="sd">    a : ndarray, shape (n, )</span>
+<span class="sd">        lower bound</span>
+<span class="sd">    b : ndarray, shape (n, )</span>
+<span class="sd">        upper bound</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    --------</span>
+<span class="sd">    fxnew : ndarray, shape (n, )</span>
+<span class="sd">        value of function</span>
+<span class="sd">    jnew : ndarray, shape (n, )</span>
+<span class="sd">        Jacobian of function </span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    Fischer&#39;s function is defined as </span>
+<span class="sd">    </span>
+<span class="sd">    .. math::</span>
+
+<span class="sd">       f(x) = \phi^-(\phi^+(f(x), a - x), b - x)</span>
+
+<span class="sd">    where</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       \phi_i^{\pm}(u, v) = u_i + v_i \pm \sqrt{u_i^2 + v_i^2}</span>
+
+<span class="sd">    It is commonly used in rootfinding for complementarity problems.</span>
+<span class="sd">    It has the same roots as</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       f(x) = \min (\max(f(x), a - x), b - x)</span>
+
+<span class="sd">    but is smoother, and thus has fewer numerical problems. </span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">a</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+
+    <span class="n">dainf</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">a</span> <span class="o">==</span> <span class="o">-</span><span class="n">inf</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">dbinf</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">b</span> <span class="o">==</span> <span class="n">inf</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">da</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">x</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">x</span>
+
+    <span class="n">fx</span><span class="p">,</span> <span class="n">J</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">sq1</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">fx</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span>  <span class="n">da</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">pval</span> <span class="o">=</span> <span class="n">fx</span> <span class="o">+</span> <span class="n">da</span> <span class="o">+</span> <span class="n">sq1</span>
+    <span class="n">pval</span><span class="p">[</span><span class="n">dainf</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span><span class="p">[</span><span class="n">dainf</span><span class="p">]</span>
+    <span class="n">sq2</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pval</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">db</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">fxnew</span> <span class="o">=</span> <span class="n">pval</span> <span class="o">+</span> <span class="n">db</span> <span class="o">-</span> <span class="n">sq2</span>
+    <span class="n">fxnew</span><span class="p">[</span><span class="n">dbinf</span><span class="p">]</span> <span class="o">=</span> <span class="n">pval</span><span class="p">[</span><span class="n">dbinf</span><span class="p">]</span>
+
+    <span class="n">dpdy</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">fx</span> <span class="o">/</span> <span class="n">sq1</span>
+    <span class="n">dpdy</span><span class="p">[</span><span class="n">dainf</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">dpdz</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">da</span> <span class="o">/</span> <span class="n">sq1</span>
+    <span class="n">dpdz</span><span class="p">[</span><span class="n">dainf</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">dmdy</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">pval</span> <span class="o">/</span> <span class="n">sq2</span>
+    <span class="n">dmdy</span><span class="p">[</span><span class="n">dbinf</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">dmdz</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">db</span> <span class="o">/</span> <span class="n">sq2</span>
+    <span class="n">dmdz</span><span class="p">[</span><span class="n">dbinf</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ff</span> <span class="o">=</span> <span class="n">dmdy</span> <span class="o">*</span> <span class="n">dpdy</span>          <span class="c"># ff = ds / df</span>
+    <span class="n">xx</span> <span class="o">=</span> <span class="n">dmdy</span> <span class="o">*</span> <span class="n">dpdz</span> <span class="o">+</span> <span class="n">dmdz</span>   <span class="c"># xx = -ds / dx</span>
+    <span class="n">jnew</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">ff</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">J</span><span class="p">)</span> <span class="o">-</span> <span class="n">sparse</span><span class="o">.</span><span class="n">spdiags</span><span class="p">(</span><span class="n">xx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">fxnew</span><span class="p">,</span> <span class="n">jnew</span>
+
+</div>
+<div class="viewcode-block" id="minmax"><a class="viewcode-back" href="../../api/nonlinear.html#psc585.nonlinear.minmax">[docs]</a><span class="k">def</span> <span class="nf">minmax</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Max-min transformation</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    f : function</span>
+<span class="sd">        Returns a tuple of the function value and Jacobian.</span>
+<span class="sd">    x : ndarray, shape (n, )</span>
+<span class="sd">    a : ndarray, shape (n, )</span>
+<span class="sd">    b : ndarray, shape (n, )</span>
+
+
+<span class="sd">    Returns</span>
+<span class="sd">    -----------</span>
+<span class="sd">    fhatval : ndarray, shape (n, )</span>
+<span class="sd">       function values</span>
+<span class="sd">    fhatjac : ndarray</span>
+<span class="sd">       Jacobian</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----------</span>
+
+<span class="sd">    Function is </span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       f(x) = \min (\max(f(x), a - x), b - x)</span>
+
+<span class="sd">    This function is used in complementarity problems.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">da</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="n">x</span>
+    <span class="n">db</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">x</span>
+    <span class="n">fval</span><span class="p">,</span> <span class="n">fjac</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">fhatval</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">fval</span><span class="p">,</span> <span class="n">da</span><span class="p">),</span> <span class="n">db</span><span class="p">)</span>
+    <span class="n">fhatjac</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">sp</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">nonzero</span><span class="p">((</span><span class="n">fval</span> <span class="o">&gt;</span> <span class="n">da</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">fval</span> <span class="o">&lt;</span> <span class="n">db</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">fhatjac</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">fjac</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="k">return</span> <span class="n">fhatval</span><span class="p">,</span> <span class="n">fhatjac</span>
+</div>
+<div class="viewcode-block" id="ncpsolve"><a class="viewcode-back" href="../../api/nonlinear.html#psc585.nonlinear.ncpsolve">[docs]</a><span class="k">def</span> <span class="nf">ncpsolve</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">10e-13</span><span class="p">,</span> <span class="n">maxsteps</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">maxit</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">usesmooth</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Solve nonlinear complementarity problem</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    f : function</span>
+<span class="sd">    a : ndarray, shape (n, )</span>
+<span class="sd">    b : ndarray, shape (n, )</span>
+<span class="sd">    x : ndarray, shape (n, )</span>
+<span class="sd">        initial guess</span>
+<span class="sd">    tol : float</span>
+<span class="sd">        convergence tolerance</span>
+<span class="sd">    maxit : int</span>
+<span class="sd">        maximum number of iterations</span>
+<span class="sd">    maxsteps : int</span>
+<span class="sd">        maximum number of backsteps</span>
+<span class="sd">        </span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    x : ndarray, shape (n, )</span>
+<span class="sd">        solution to ncp</span>
+<span class="sd">    fval : ndarray, shape (n, )</span>
+<span class="sd">        function value at x</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    Notes</span>
+<span class="sd">    ---------</span>
+
+<span class="sd">    A nonlinear complementarity problem has two $n$-vectors</span>
+<span class="sd">    a and b with a &lt; b and a function f : \R^n \to \R^n.</span>
+<span class="sd">    The CP is to find an n-vector $x \in [a, b]$ that satisfies</span>
+<span class="sd">    the following constraints</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       a \leq x \leq b</span>
+<span class="sd">       x_i &gt; a_i \to f_i(x) \geq 0 \forall i = 1, \dots, n</span>
+<span class="sd">       x_i &lt; b_i \to f_i(x) \leq 0 \forall i = 1, \dots, n</span>
+<span class="sd">        </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">usesmooth</span><span class="p">:</span>
+        <span class="n">_smooth</span> <span class="o">=</span> <span class="n">smooth</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_smooth</span> <span class="o">=</span> <span class="n">minmax</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxit</span><span class="p">):</span>
+        <span class="n">fval</span><span class="p">,</span> <span class="n">fjac</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">i</span><span class="p">,</span> <span class="n">fval</span>
+        <span class="n">ftmp</span><span class="p">,</span> <span class="n">fjac</span> <span class="o">=</span> <span class="n">_smooth</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="c">## infinity norm</span>
+        <span class="n">dx</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">la</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">fjac</span><span class="p">,</span> <span class="n">ftmp</span><span class="p">))</span>
+        <span class="n">fnorm</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">ftmp</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fnorm</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="n">fnormold</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">for</span> <span class="n">backsteps</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxsteps</span><span class="p">):</span>
+            <span class="n">xnew</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">dx</span>
+            <span class="n">fnew</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">xnew</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">fnew</span> <span class="o">=</span> <span class="n">_smooth</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">xnew</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">fnormnew</span> <span class="o">=</span> <span class="n">la</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">fnew</span><span class="p">,</span> <span class="n">inf</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fnormnew</span> <span class="o">&lt;</span> <span class="n">fnorm</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fnormold</span> <span class="o">&lt;</span> <span class="n">fnormnew</span><span class="p">:</span>
+                <span class="n">dx</span> <span class="o">*=</span> <span class="mi">2</span>
+                <span class="k">break</span>
+            <span class="n">fnormold</span> <span class="o">=</span> <span class="n">fnormnew</span>
+            <span class="n">dx</span> <span class="o">/=</span> <span class="mi">2</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">backsteps</span><span class="p">)</span>
+        <span class="c">## No backstepping</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="n">dx</span>
+
+    <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">fval</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../psc585.html" >psc585</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

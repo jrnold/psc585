@@ -1,0 +1,407 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psc585.dp &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="../index.html" />
+    <link rel="next" title="psc585.markov" href="markov.html" />
+    <link rel="prev" title="psc585" href="psc585.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="markov.html" title="psc585.markov"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="psc585.html" title="psc585"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-psc585.dp">
+<span id="psc585-dp"></span><h1>psc585.dp<a class="headerlink" href="#module-psc585.dp" title="Permalink to this headline">¶</a></h1>
+<p>Dynamic Programming</p>
+<dl class="class">
+<dt id="psc585.dp.Ddpsolve">
+<em class="property">class </em><tt class="descclassname">psc585.dp.</tt><tt class="descname">Ddpsolve</tt><big>(</big><em>discount</em>, <em>reward</em>, <em>P</em>, <em>T=None</em>, <em>vterm=None</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#Ddpsolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.Ddpsolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Discrete Time, Discrete Choice Dynamic Programming Problems</p>
+<p class="rubric">Attributes</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="psc585.dp.Ddpsolve.backsolve">
+<tt class="descname">backsolve</tt><big>(</big><em>T=None</em>, <em>vterm=None</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#Ddpsolve.backsolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.Ddpsolve.backsolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve finite system by backward recursion</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>T</strong> : int, optional</p>
+<blockquote>
+<div><p>Number of periods of time.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>X</strong> : array, shape (n, T)</p>
+<blockquote>
+<div><p>Optimal controls. An optimal policy for each starting state</p>
+</div></blockquote>
+<p><strong>V</strong> : array, shape (n, T + 1)</p>
+<blockquote class="last">
+<div><p>Value function.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="psc585.dp.Ddpsolve.from_transfunc">
+<em class="property">classmethod </em><tt class="descname">from_transfunc</tt><big>(</big><em>transfunc</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#Ddpsolve.from_transfunc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.Ddpsolve.from_transfunc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize with deterministic transition function</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>transfunc</strong> : array (n, m)</p>
+<blockquote class="last">
+<div><p>Deterministic transition function. Axes are
+state, action.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="psc585.dp.Ddpsolve.from_transprob">
+<em class="property">classmethod </em><tt class="descname">from_transprob</tt><big>(</big><em>transprob</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#Ddpsolve.from_transprob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.Ddpsolve.from_transprob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize with transaction probabilities</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>transprob</strong> : array, shape (m, n, n)</p>
+<blockquote class="last">
+<div><p>Stochastic transition matrix. The axes correspond to action,
+initial state, and next state.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.dp.Ddpsolve.funcit">
+<tt class="descname">funcit</tt><big>(</big><em>v=None</em>, <em>maxit=100</em>, <em>tol=1.4901161193847656e-08</em>, <em>error_bounds=True</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#Ddpsolve.funcit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.Ddpsolve.funcit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve Bellman equations by function iteration</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>v</strong> : array, shape (n, ), optional</p>
+<blockquote>
+<div><p>Initial guess</p>
+</div></blockquote>
+<p><strong>maxit</strong> : int, optional</p>
+<blockquote>
+<div><p>Maximum number of iterations</p>
+</div></blockquote>
+<p><strong>tol</strong> : float, optional</p>
+<blockquote>
+<div><p>Convergence tolerance</p>
+</div></blockquote>
+<p><strong>error_bounds</strong> : bool, optional</p>
+<blockquote>
+<div><p>Use error bounds to determine convergence.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>info</strong> : int</p>
+<blockquote>
+<div><p>Exit status. 0 if converged. -1 if not.</p>
+</div></blockquote>
+<p><strong>t</strong> : int</p>
+<blockquote>
+<div><p>Number of iterations</p>
+</div></blockquote>
+<p><strong>relres</strong> : float</p>
+<blockquote>
+<div><p>Residual variance</p>
+</div></blockquote>
+<p><strong>v</strong> : array, shape (n, )</p>
+<p><strong>x</strong> : array, shape</p>
+<p class="last"><strong>pstar</strong> : array, shape</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.dp.Ddpsolve.newton">
+<tt class="descname">newton</tt><big>(</big><em>v=None</em>, <em>maxit=100</em>, <em>tol=1.4901161193847656e-08</em>, <em>verbose=False</em>, <em>gauss_seidel=False</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#Ddpsolve.newton"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.Ddpsolve.newton" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve Bellman equations via Newton method (policy iteration)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>v</strong> : array, shape (n, ), optional</p>
+<blockquote>
+<div><p>Initial guess for values.</p>
+</div></blockquote>
+<p><strong>x</strong> : array, shape (n, ), optional</p>
+<blockquote>
+<div><p>Initial guess for policy.</p>
+</div></blockquote>
+<p><strong>maxit</strong> : int, optional</p>
+<blockquote>
+<div><p>Maximum number of iterations</p>
+</div></blockquote>
+<p><strong>tol</strong> : float, optional</p>
+<blockquote>
+<div><p>Convergence tolerance</p>
+</div></blockquote>
+<p><strong>gauss_seidel</strong> : bool, optional</p>
+<blockquote>
+<div><p>Use Gauss-Seidel to solve the linear equation.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>info</strong> : int</p>
+<blockquote>
+<div><p>Exit status. 0 if converged. -1 if not.</p>
+</div></blockquote>
+<p><strong>t</strong> : int</p>
+<blockquote>
+<div><p>Number of iterations</p>
+</div></blockquote>
+<p><strong>relres</strong> : float</p>
+<blockquote>
+<div><p>Residual variance</p>
+</div></blockquote>
+<p><strong>v</strong> : array, shape (n, )</p>
+<p><strong>x</strong> : array, shape</p>
+<p class="last"><strong>pstar</strong> : array, shape</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Also called policy iteration.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.dp.Ddpsolve.setReward">
+<tt class="descname">setReward</tt><big>(</big><em>reward</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#Ddpsolve.setReward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.Ddpsolve.setReward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set reward</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.dp.Ddpsolve.valmax">
+<tt class="descname">valmax</tt><big>(</big><em>v</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#Ddpsolve.valmax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.Ddpsolve.valmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve single Bellman equation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>v</strong> : array (n, )</p>
+<blockquote class="last">
+<div><blockquote>
+<div><p>Optimal values</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>x <span class="classifier-delimiter">:</span> <span class="classifier">array (n, )</span></dt>
+<dd><p class="first last">Optimal controls.</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p>ight}</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psc585.dp.Ddpsolve.valpol">
+<tt class="descname">valpol</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#Ddpsolve.valpol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.Ddpsolve.valpol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluation policy</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>x</strong> : array</p>
+<blockquote>
+<div><p>policy (an action for all states)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>pstar</strong> : array, shape (n, n)</p>
+<blockquote>
+<div><p>Transition probability matrix</p>
+</div></blockquote>
+<p><strong>fstar</strong> : array, shape (n, )</p>
+<blockquote>
+<div><p>Optimal rewards</p>
+</div></blockquote>
+<p><strong>ind</strong> : array, shape (n,)</p>
+<blockquote class="last">
+<div><p>Index of values</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p><cite>x</cite> is (n, T+1) for finite horizon problems, and (n, 1) for infinite
+horizon problems.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.dp.ddpsimul">
+<tt class="descclassname">psc585.dp.</tt><tt class="descname">ddpsimul</tt><big>(</big><em>pstar</em>, <em>s</em>, <em>N</em>, <em>x</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#ddpsimul"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.ddpsimul" title="Permalink to this definition">¶</a></dt>
+<dd><p>Monte-Carlo simulation of discrete-state/action controlled Markov process</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>pstar</strong> : array, shape (n, n) or (n, n, T)</p>
+<blockquote>
+<div><p>Optimal state transition matrix. Usually returned by one of the methods of
+<cite>Dpsolve</cite>. The array has shape (n, n) for infinite horizon processes,
+and (n, n, T) for finite horizon processes.</p>
+</div></blockquote>
+<p><strong>s</strong> : array, shape (k, )</p>
+<blockquote>
+<div><p>Initial states</p>
+</div></blockquote>
+<p><strong>N</strong> : int</p>
+<blockquote>
+<div><p>Number of simulations</p>
+</div></blockquote>
+<p><strong>x</strong> : array, shape (n, ) or (n, T)</p>
+<blockquote>
+<div><p>Optimal controls</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>spath</strong> : array, shape (k, N + 1)</p>
+<blockquote class="last">
+<div><p>Simulated states</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.dp.eyeminus">
+<tt class="descclassname">psc585.dp.</tt><tt class="descname">eyeminus</tt><big>(</big><em>x</em><big>)</big><a class="reference internal" href="../_modules/psc585/dp.html#eyeminus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.dp.eyeminus" title="Permalink to this definition">¶</a></dt>
+<dd><p>1 - x in place</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="psc585.html"
+                        title="previous chapter">psc585</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="markov.html"
+                        title="next chapter">psc585.markov</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/dp.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="markov.html" title="psc585.markov"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="psc585.html" title="psc585"
+             >previous</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

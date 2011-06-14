@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>psc585.nonlinear &mdash; PSC 585 Course Code v0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="top" title="PSC 585 Course Code v0.1 documentation" href="../index.html" />
+    <link rel="next" title="psc585.ps1" href="ps1.html" />
+    <link rel="prev" title="psc585.markov" href="markov.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ps1.html" title="psc585.ps1"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="markov.html" title="psc585.markov"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-psc585.nonlinear">
+<span id="psc585-nonlinear"></span><h1>psc585.nonlinear<a class="headerlink" href="#module-psc585.nonlinear" title="Permalink to this headline">¶</a></h1>
+<p>Functions to solve nonlinear equations and complementarity problems</p>
+<dl class="function">
+<dt id="psc585.nonlinear.bisect">
+<tt class="descclassname">psc585.nonlinear.</tt><tt class="descname">bisect</tt><big>(</big><em>f</em>, <em>a</em>, <em>b</em>, <em>tol=0.0001</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/psc585/nonlinear.html#bisect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.nonlinear.bisect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find roots by bisection</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>f</strong> : function</p>
+<p><strong>a</strong> : array</p>
+<blockquote>
+<div><p>Lower bounds</p>
+</div></blockquote>
+<p><strong>b</strong> : array</p>
+<blockquote>
+<div><p>Upper bounds</p>
+</div></blockquote>
+<p><strong>tol</strong> : float</p>
+<blockquote>
+<div><p>Tolerance criteria</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>x</strong> : array</p>
+<blockquote class="last">
+<div><p>Roots of f</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.nonlinear.fixpoint">
+<tt class="descclassname">psc585.nonlinear.</tt><tt class="descname">fixpoint</tt><big>(</big><em>f</em>, <em>x</em>, <em>tol=None</em>, <em>maxit=100</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/psc585/nonlinear.html#fixpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.nonlinear.fixpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fixed point function iteration</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>f</strong> : function</p>
+<blockquote>
+<div><p>Function for which to find the fixed point.</p>
+</div></blockquote>
+<p><strong>x</strong> : array</p>
+<blockquote>
+<div><p>Initial guess.</p>
+</div></blockquote>
+<p><strong>tol</strong> : float, optional</p>
+<blockquote>
+<div><p>Tolerance for convergence.</p>
+</div></blockquote>
+<p><strong>maxit</strong> : int, optional</p>
+<blockquote>
+<div><p>Maximum number of iterations.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>info</strong> : integer</p>
+<blockquote>
+<div><p>Did function converge? -1 if it did not, and 0 if it did.</p>
+</div></blockquote>
+<p><strong>relres</strong> : float</p>
+<blockquote>
+<div><p>Relative residual at last iteration.</p>
+</div></blockquote>
+<p><strong>t</strong> : int</p>
+<blockquote>
+<div><p>Number of iterations</p>
+</div></blockquote>
+<p><strong>gval</strong> : array</p>
+<blockquote class="last">
+<div><p>Fixed point, where f(x) = x.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.nonlinear.minmax">
+<tt class="descclassname">psc585.nonlinear.</tt><tt class="descname">minmax</tt><big>(</big><em>f</em>, <em>x</em>, <em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/psc585/nonlinear.html#minmax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.nonlinear.minmax" title="Permalink to this definition">¶</a></dt>
+<dd><p>Max-min transformation</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>f</strong> : function</p>
+<blockquote>
+<div><p>Returns a tuple of the function value and Jacobian.</p>
+</div></blockquote>
+<p><strong>x</strong> : ndarray, shape (n, )</p>
+<p><strong>a</strong> : ndarray, shape (n, )</p>
+<p><strong>b</strong> : ndarray, shape (n, )</p>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>fhatval</strong> : ndarray, shape (n, )</p>
+<blockquote>
+<div><p>function values</p>
+</div></blockquote>
+<p><strong>fhatjac</strong> : ndarray</p>
+<blockquote class="last">
+<div><p>Jacobian</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Function is</p>
+<div class="math">
+<p><img src="../_images/math/d0d33a26ac65e45b80890a4733e2144ef53aab1d.png" alt="f(x) = \min (\max(f(x), a - x), b - x)" /></p>
+</div><p>This function is used in complementarity problems.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.nonlinear.ncpsolve">
+<tt class="descclassname">psc585.nonlinear.</tt><tt class="descname">ncpsolve</tt><big>(</big><em>f</em>, <em>a</em>, <em>b</em>, <em>x</em>, <em>tol=1e-12</em>, <em>maxsteps=10</em>, <em>maxit=100</em>, <em>usesmooth=True</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/psc585/nonlinear.html#ncpsolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.nonlinear.ncpsolve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve nonlinear complementarity problem</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>f</strong> : function</p>
+<blockquote>
+<div><p>a : ndarray, shape (n, )
+b : ndarray, shape (n, )
+x : ndarray, shape (n, )</p>
+<blockquote>
+<div><p>initial guess</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>tol <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd><p class="first last">convergence tolerance</p>
+</dd>
+<dt>maxit <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">maximum number of iterations</p>
+</dd>
+<dt>maxsteps <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">maximum number of backsteps</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>x</strong> : ndarray, shape (n, )</p>
+<blockquote class="last">
+<div><blockquote>
+<div><p>solution to ncp</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>fval <span class="classifier-delimiter">:</span> <span class="classifier">ndarray, shape (n, )</span></dt>
+<dd><p class="first last">function value at x</p>
+</dd>
+</dl>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>orall i = 1, dots, n</dt>
+<dd>x_i &lt; b_i        o f_i(x) leq 0</dd>
+</dl>
+<p>orall i = 1, dots, n</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="psc585.nonlinear.smooth">
+<tt class="descclassname">psc585.nonlinear.</tt><tt class="descname">smooth</tt><big>(</big><em>f</em>, <em>x</em>, <em>a</em>, <em>b</em><big>)</big><a class="reference internal" href="../_modules/psc585/nonlinear.html#smooth"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#psc585.nonlinear.smooth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fischer&#8217;s function</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>f</strong> : function</p>
+<blockquote>
+<div><p>should return (fx, J) where fx are the function
+values evaluated at x, and J is the Jacobian.</p>
+</div></blockquote>
+<p><strong>x</strong> : ndarray, shape (n, )</p>
+<p><strong>a</strong> : ndarray, shape (n, )</p>
+<blockquote>
+<div><p>lower bound</p>
+</div></blockquote>
+<p><strong>b</strong> : ndarray, shape (n, )</p>
+<blockquote>
+<div><p>upper bound</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>fxnew</strong> : ndarray, shape (n, )</p>
+<blockquote>
+<div><p>value of function</p>
+</div></blockquote>
+<p><strong>jnew</strong> : ndarray, shape (n, )</p>
+<blockquote class="last">
+<div><p>Jacobian of function</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Fischer&#8217;s function is defined as</p>
+<div class="math">
+<p><img src="../_images/math/a5320beb82fefaddd97664a2520d96cf3ddf0918.png" alt="f(x) = \phi^-(\phi^+(f(x), a - x), b - x)" /></p>
+</div><p>where</p>
+<div class="math">
+<p><img src="../_images/math/625f4cd8f5d0faa0d55c116788879836defda8d2.png" alt="\phi_i^{\pm}(u, v) = u_i + v_i \pm \sqrt{u_i^2 + v_i^2}" /></p>
+</div><p>It is commonly used in rootfinding for complementarity problems.
+It has the same roots as</p>
+<div class="math">
+<p><img src="../_images/math/d0d33a26ac65e45b80890a4733e2144ef53aab1d.png" alt="f(x) = \min (\max(f(x), a - x), b - x)" /></p>
+</div><p>but is smoother, and thus has fewer numerical problems.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="markov.html"
+                        title="previous chapter">psc585.markov</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="ps1.html"
+                        title="next chapter">psc585.ps1</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/nonlinear.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="ps1.html" title="psc585.ps1"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="markov.html" title="psc585.markov"
+             >previous</a> |</li>
+        <li><a href="../index.html">PSC 585 Course Code v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jeffrey B. Arnold.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
