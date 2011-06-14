@@ -29,6 +29,7 @@ Then, I estimate :math:`\\\\theta` with nested pseudo-likelhood.
 .. literalinclude:: ../../assignments/a4/a4.py
    :lines: 22
 
+
 The estimates for :math:`\\\\theta` are
 
 ::
