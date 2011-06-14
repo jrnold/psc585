@@ -430,10 +430,11 @@ class FinalModel(object):
         """
         Zi1 = self.Zia(Pg, i, 1)
         Z = self.Zi(Pg, Pp, i)
-        idp_inv = la.inv(sp.eye(self.n) - self.delta * self.ptilde(Pp, Pg))
-        dpp = self.delta * (self.ptilde_i(Pp, Pg, i, 1) -
-                            self.ptilde_i(Pp, Pg, i, 0))
-        W = (Zi1 + self.delta * dpp.dot(idp_inv).dot(Z))
+        Pi1 = self.ptilde_i(Pp, Pg, i, 1)
+        Pi0 = self.ptilde_i(Pp, Pg, i, 0)
+        idp_inv_Z = la.solve(sp.eye(self.n) - self.delta * self.ptilde(Pp, Pg), Z)
+        dpp = self.delta * (Pi1 - Pi0)
+        W = (Zi1 + self.delta * (Pi1 - Pi0).dot(idp_inv_Z))
         return W
 
     def initprob(self):
@@ -494,11 +495,11 @@ class FinalModel(object):
            C_i^P = \delta (\tilde{P}_i^P(1)  - \tilde{P}_i^P(0))(1 - \delta \tilde{P}^P)^{-1} E_i^P
 
         """
-        idp_inv = la.inv(sp.eye(self.n) - self.delta * self.ptilde(Pp, Pg))
-        dpp = self.delta * (self.ptilde_i(Pp, Pg, i, 1) -
-                            self.ptilde_i(Pp, Pg, i, 0))
         E = self.Ei(Pp, i)
-        C = self.delta * dpp.dot(idp_inv).dot(E)
+        idp_inv_E = la.solve(sp.eye(self.n) - self.delta * self.ptilde(Pp, Pg), E)
+        Pi1 = self.ptilde_i(Pp, Pg, i, 1)
+        Pi0 = self.ptilde_i(Pp, Pg, i, 0)
+        C = self.delta * (Pi1 - Pi0).dot(idp_inv_E)
         return C
 
     def C_d(self, Pp, Pg):
