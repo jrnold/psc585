@@ -24,13 +24,13 @@ the data from the .mat files provided.
 .. literalinclude:: ../../assignments/a4/a4.py
    :lines: 1-19
 
-Then, I estimate :math:`\\\\theta` with nested pseudo-likelhood. 
+Then, I estimate :math:`\theta` with nested pseudo-likelhood. 
 
 .. literalinclude:: ../../assignments/a4/a4.py
    :lines: 22
 
 
-The estimates for :math:`\\\\theta` are
+The estimates for :math:`\theta` are
 
 ::
    [ 0.00780143  0.59974144  1.95694046  0.29005511  0.26612347]
