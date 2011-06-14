@@ -22,13 +22,12 @@ First, I create a :py:class:`~psc585.ps4.FinalModel` object to hold
 the data from the .mat files provided.
 
 .. literalinclude:: ../../assignments/a4/a4.py
-   :lines: 1-19
+   :lines: 1-12
 
 Then, I estimate :math:`\theta` with nested pseudo-likelhood. 
 
 .. literalinclude:: ../../assignments/a4/a4.py
-   :lines: 22
-
+   :lines: 14-15
 
 The estimates for :math:`\theta` are ::
 

@@ -53,7 +53,7 @@
             
   <div class="section" id="assignment4">
 <h1>Assignment4<a class="headerlink" href="#assignment4" title="Permalink to this headline">¶</a></h1>
-<p>This is my write-up for <a class="reference download internal" href="_downloads/PSC585Ex49.pdf"><tt class="xref download docutils literal"><span class="pre">Assignment</span> <span class="pre">4</span></tt></a>.</p>
+<p>This is my write-up for <a class="reference download internal" href="_downloads/PSC585Ex410.pdf"><tt class="xref download docutils literal"><span class="pre">Assignment</span> <span class="pre">4</span></tt></a>.</p>
 <p>Most of the code to implement this assignment is in
 <a class="reference internal" href="api/ps4.html#psc585.ps4.FinalModel" title="psc585.ps4.FinalModel"><tt class="xref py py-class docutils literal"><span class="pre">psc585.ps4.FinalModel</span></tt></a>.  The attributes of this class includes
 the data from <tt class="docutils literal"><span class="pre">FinalModel.mat</span></tt> and <tt class="docutils literal"><span class="pre">FinalData.mat</span></tt> provided with
@@ -78,18 +78,12 @@ the data from the .mat files provided.</p>
 <span class="kn">import</span> <span class="nn">psc585</span>
 <span class="kn">from</span> <span class="nn">psc585</span> <span class="kn">import</span> <span class="n">ps4</span>
 
-<span class="n">foo</span> <span class="o">=</span> <span class="n">ps4</span><span class="o">.</span><span class="n">FinalModel</span><span class="o">.</span><span class="n">from_mat</span><span class="p">(</span><span class="s">&quot;FinalModel.mat&quot;</span><span class="p">,</span> <span class="s">&quot;FinalData.mat&quot;</span><span class="p">)</span>
-
-<span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">4403205</span><span class="p">)</span>
-
-<span class="c"># Initial Conditional Choice probabilities</span>
-<span class="c"># Government</span>
-<span class="n">Pg</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">foo</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">foo</span><span class="o">.</span><span class="n">k</span><span class="p">))</span>
-<span class="n">Pg</span> <span class="o">/=</span> <span class="n">Pg</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)[:,</span> <span class="n">newaxis</span><span class="p">]</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ps4</span><span class="o">.</span><span class="n">FinalModel</span><span class="o">.</span><span class="n">from_mat</span><span class="p">(</span><span class="s">&quot;FinalModel.mat&quot;</span><span class="p">,</span> <span class="s">&quot;FinalData.mat&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Then, I estimate <img class="math" src="_images/math/52e8ed7a3ba22130ad3984eb2cd413406475a689.png" alt="\theta"/> with nested pseudo-likelhood.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">Pp0</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">foo</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">foo</span><span class="o">.</span><span class="n">k</span><span class="p">))</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span> <span class="o">=</span> <span class="n">foo</span><span class="o">.</span><span class="n">initprob</span><span class="p">()</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">foo</span><span class="o">.</span><span class="n">npl</span><span class="p">(</span><span class="n">Pp</span><span class="p">,</span> <span class="n">Pg</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The estimates for <img class="math" src="_images/math/52e8ed7a3ba22130ad3984eb2cd413406475a689.png" alt="\theta"/> are</p>
