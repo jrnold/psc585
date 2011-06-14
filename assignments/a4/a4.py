@@ -28,5 +28,4 @@ Pp = sp.concatenate([sp.vstack((Pp0[:, i], 1 - Pp0[:, i])).T
 # Initial Parameters
 theta0 = random.normal(0, 1, (5, 1))
 
-results = foo.argmax_theta(Pp, Pg)
 theta = foo.npl(Pp, Pg, verbose=True)

@@ -312,9 +312,20 @@ class FinalModel(object):
            E_i^P(l, s) = \sum_{a=0}^1 P_i[a | l, s] E_i^P(a, l, s)
 
         """
-        E = sp.vstack((self.Ei_ai(Pp, i, 1), self.Ei_ai(Pp, i, 0))).T
-        W = sp.vstack((Pp[:, _pp(i, 1)], Pp[:, _pp(i, 1)])).T
+        E = sp.vstack((self.Ei_ai(Pp, i, a) for a in (0, 1))).T
+        W = sp.vstack((Pp[:, _pp(i, a)] for a in (0, 1))).T
         return (E * W).sum(1)
+
+    def Eg_ag(self, Pg, a):
+        """ Calculate Z_g^P(a_g)
+        """
+        return -sp.log(Pg[:, a])
+
+    def Eg(self, Pg):
+        """ Calculate Z_g^P
+        """
+        E = sp.vstack((self.Eg_ag(Pg, a) for a in range(7))).T
+        return (Pg * E).sum(1)
 
     def Zia(self, Pg, i, a):
         """ Calculate Z_i^P(a_i)
