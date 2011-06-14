@@ -49,7 +49,7 @@
   <h1>Source code for psc585.ps1</h1><div class="highlight"><pre>
 <span class="sd">&quot;&quot;&quot; Problem Set 1: Markov Chains&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="p2a_f"><a class="viewcode-back" href="../../index.html#psc585.ps1.p2a_f">[docs]</a><span class="k">def</span> <span class="nf">p2a_f</span><span class="p">(</span><span class="n">sprime</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+<div class="viewcode-block" id="p2a_f"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.p2a_f">[docs]</a><span class="k">def</span> <span class="nf">p2a_f</span><span class="p">(</span><span class="n">sprime</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Assignment 1, problem 2, function f</span>
 
 <span class="sd">    Parameters</span>
@@ -88,7 +88,7 @@
     <span class="k">return</span> <span class="n">y</span>
 
 </div>
-<div class="viewcode-block" id="p2c_f_sample"><a class="viewcode-back" href="../../index.html#psc585.ps1.p2c_f_sample">[docs]</a><span class="k">def</span> <span class="nf">p2c_f_sample</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<div class="viewcode-block" id="p2c_f_sample"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.p2c_f_sample">[docs]</a><span class="k">def</span> <span class="nf">p2c_f_sample</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Draw sample from Bivariate Normal in A1 exercise 2.c</span>
 
 <span class="sd">    Parameters</span>
@@ -111,7 +111,7 @@
     <span class="k">return</span> <span class="n">sprime</span>
 
   </div>
-<div class="viewcode-block" id="p2c_f"><a class="viewcode-back" href="../../index.html#psc585.ps1.p2c_f">[docs]</a><span class="k">def</span> <span class="nf">p2c_f</span><span class="p">(</span><span class="n">sprime</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+<div class="viewcode-block" id="p2c_f"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.p2c_f">[docs]</a><span class="k">def</span> <span class="nf">p2c_f</span><span class="p">(</span><span class="n">sprime</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Function f from</span>
 
 <span class="sd">    Parameters</span>
@@ -136,12 +136,12 @@
     <span class="n">p</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">*</span> <span class="n">p2</span>
     <span class="k">return</span> <span class="n">p</span>
 </div>
-<div class="viewcode-block" id="quadratic_utility"><a class="viewcode-back" href="../../index.html#psc585.ps1.quadratic_utility">[docs]</a><span class="k">def</span> <span class="nf">quadratic_utility</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<div class="viewcode-block" id="quadratic_utility"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.quadratic_utility">[docs]</a><span class="k">def</span> <span class="nf">quadratic_utility</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Quadratic utility function&quot;&quot;&quot;</span>
     <span class="n">u</span> <span class="o">=</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">square</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">u</span>
 </div>
-<div class="viewcode-block" id="Legislature"><a class="viewcode-back" href="../../index.html#psc585.ps1.Legislature">[docs]</a><span class="k">class</span> <span class="nc">Legislature</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Legislature"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.Legislature">[docs]</a><span class="k">class</span> <span class="nc">Legislature</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class representing a legislature</span>
 
 <span class="sd">    Parameters</span>
@@ -160,22 +160,22 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ufunc</span> <span class="o">=</span> <span class="n">ufunc</span>
 
-<div class="viewcode-block" id="Legislature.votes"><a class="viewcode-back" href="../../index.html#psc585.ps1.Legislature.votes">[docs]</a>    <span class="k">def</span> <span class="nf">votes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
+<div class="viewcode-block" id="Legislature.votes"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.Legislature.votes">[docs]</a>    <span class="k">def</span> <span class="nf">votes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Votes of legislature on p versus status quo q&quot;&quot;&quot;</span>
         <span class="n">yeas</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="bp">self</span><span class="o">.</span><span class="n">ufunc</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ufunc</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">yeas</span>
 </div>
-<div class="viewcode-block" id="Legislature.yeas"><a class="viewcode-back" href="../../index.html#psc585.ps1.Legislature.yeas">[docs]</a>    <span class="k">def</span> <span class="nf">yeas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
+<div class="viewcode-block" id="Legislature.yeas"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.Legislature.yeas">[docs]</a>    <span class="k">def</span> <span class="nf">yeas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Number of yeas on p compared to status quo q&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">votes</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 </div>
-<div class="viewcode-block" id="Legislature.majpref"><a class="viewcode-back" href="../../index.html#psc585.ps1.Legislature.majpref">[docs]</a>    <span class="k">def</span> <span class="nf">majpref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
+<div class="viewcode-block" id="Legislature.majpref"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.Legislature.majpref">[docs]</a>    <span class="k">def</span> <span class="nf">majpref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Is policy p majority preferred to q&quot;&quot;&quot;</span>
         <span class="n">majority</span> <span class="o">=</span> <span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="n">ispref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">yeas</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">majority</span>
         <span class="k">return</span> <span class="n">ispref</span>
 </div>
-<div class="viewcode-block" id="Legislature.transition"><a class="viewcode-back" href="../../index.html#psc585.ps1.Legislature.transition">[docs]</a>    <span class="k">def</span> <span class="nf">transition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
+<div class="viewcode-block" id="Legislature.transition"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.Legislature.transition">[docs]</a>    <span class="k">def</span> <span class="nf">transition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return a transition matrix for a Markov Chain</span>
 
 <span class="sd">        Parameters</span>
@@ -213,7 +213,7 @@
     <span class="k">print</span> <span class="nb">set</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
     <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">tolist</span><span class="p">())))</span>
 
-<div class="viewcode-block" id="Provinces"><a class="viewcode-back" href="../../index.html#psc585.ps1.Provinces">[docs]</a><span class="k">class</span> <span class="nc">Provinces</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Provinces"><a class="viewcode-back" href="../../api/ps1.html#psc585.ps1.Provinces">[docs]</a><span class="k">class</span> <span class="nc">Provinces</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Provinces in a country</span>
 
 <span class="sd">    Parameters</span>
